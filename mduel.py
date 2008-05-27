@@ -6,7 +6,7 @@ Mduel
 import os, pygame
 from pygame.locals import *
 #function to create our resources
-def load_image(name, rect, colorkey=None):
+def loadImage(name, rect, colorkey=None):
 	fullname = os.path.join('data', name)
 	try:
 		image = pygame.image.load(fullname)
@@ -27,14 +27,15 @@ def load_image(name, rect, colorkey=None):
 
 #classes for our game objects
 class Player(pygame.sprite.Sprite):
-	"""Player"""
+	"""The Payer class"""
 	def __init__(self):
+		"""Initializes Player class"""
 		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
 		self.runframe=[]
 		for i in range(4):
-			image = load_image("run"+str(i)+".png",0,-1)
+			image = loadImage("run"+str(i)+".png",0,-1)
 			self.runframe.append(image)
-		self.stand, self.rect = load_image('stand.png', 1,-1)
+		self.stand, self.rect = loadImage('stand.png', 1,-1)
 		self.image = self.stand
 		"""Set the number of Pixels to move each time"""
 		self.x_dist = 3
@@ -50,6 +51,7 @@ class Player(pygame.sprite.Sprite):
 		self.right = right
 		self.left = left
 	def MoveKeyDown(self, key):
+		"""Event fuction for when any keys bound to the current player object are hit"""
 		self.running = 1
 		if key == self.right:
 			self.xMove += self.x_dist
@@ -59,6 +61,7 @@ class Player(pygame.sprite.Sprite):
 			self.dir = 1
 
 	def MoveKeyUp(self, key):
+		"""Event fuction for when any keys bound to the current player object are hit"""
 		if key == self.right:
 			self.xMove += -self.x_dist
 		elif key == self.left:
@@ -83,20 +86,20 @@ class Platform(pygame.sprite.Sprite):
 	"""Platform Sprite"""
 	def __init__(self,x,y):
 		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
-		self.image, self.rect = load_image('platform.png', 1, -1)
+		self.image, self.rect = loadImage('platform.png', 1, -1)
 		self.rect.move_ip(x, y)
 
 class Selector(pygame.sprite.Sprite):
 	"""The selector on menup2"""
 	def __init__(self):
 		pygame.sprite.Sprite.__init__(self)
-		self.image, self.rect = load_image('selector.png', 1, -1)
+		self.image, self.rect = loadImage('selector.png', 1, -1)
 		#size = 
-
 		self.y=94
 		self.rect.move_ip(212, self.y)
 		
 	def move(self, key):
+		"""Moves the selector and loops when at bottom or top"""
 		if key == K_DOWN:
 			self.rect.move_ip(0,30)
 			self.y+=30
@@ -110,10 +113,12 @@ class Selector(pygame.sprite.Sprite):
 			self.rect.move_ip(0,-210)
 			self.y=94
 
+def getMenuItem(y):
+	"""simple fuction to tell the item number on the main menu"""
+	return (y-94)/30
+
 def main():
-	"""this function is called when the program starts.
-	   it initializes everything it needs, then runs in
-	   a loop until the function returns."""
+	"""Main fuction that sets up variables and contains the main loop"""
 #Initialize Everything
 	pygame.init()
 	
@@ -121,8 +126,8 @@ def main():
 	pygame.display.set_caption('Mduel')
 	#pygame.mouse.set_visible(0)
 #Menu
-	introimage = load_image("intro.png",0)
-	menup2 = load_image("menup2.png",0)
+	introimage = loadImage("intro.png",0)
+	menup2 = loadImage("menup2.png",0)
 #Create The Backgound
 	background = pygame.Surface(screen.get_size())
 	background = background.convert()
@@ -201,8 +206,10 @@ def main():
 						or event.key == K_UP):
 							selector.move(event.key)
 						elif event.key == K_RETURN:
-							if selector.y == 94:
+							if getMenuItem(selector.y) == 0:
 								page=10
+							if getMenuItem(selector.y) == 6:
+								return
 						
 			if page is 0:
 				background.blit(introimage, (0, 0))
@@ -218,10 +225,10 @@ def main():
 				menu = 0
 				background.fill((0, 0, 0))
 			screen.blit(background, (0, 0))
-			
 			pygame.display.flip()
-if __name__ == '__main__': main()
 
+if __name__ == '__main__': main()
+#new lines so i can scroll down farther
 
 
 
