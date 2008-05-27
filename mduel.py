@@ -3,7 +3,7 @@
 Mduel
 """
 #Import Modules
-import os, pygame, re
+import os, pygame, re, socket, cPickle
 from pygame.locals import *
 #function to create our resources
 def loadImage(name, rect, colorkey=None):
@@ -63,10 +63,7 @@ class Player(pygame.sprite.Sprite):
 
 	def MoveKeyUp(self, key):
 		"""Event fuction for when any keys bound to the current player object are let go of"""
-		if key == self.right:
-			self.xMove = 0
-		elif key == self.left:
-			self.xMove = 0
+		self.xMove = 0
 		self.running = 0
 		self.current = 0
 	def update(self):
@@ -81,6 +78,8 @@ class Player(pygame.sprite.Sprite):
 			self.image = self.stand
 		if self.dir==1:
 			self.image = pygame.transform.flip(self.image, 1, 0)
+		#if self.xMove > 0:
+		#	self.xMove -= 1
 		self.rect.move_ip(self.xMove,self.yMove)
 
 class Platform(pygame.sprite.Sprite):
@@ -116,7 +115,22 @@ class Selector(pygame.sprite.Sprite):
 def getMenuItem(y):
 	"""simple fuction to tell the item number on the main menu"""
 	return (y-94)/30
-
+def binds():
+	HOST = ''				# Symbolic name meaning the local host
+	PORT = 50007			# Arbitrary non-privileged port
+	s = socket.socket()
+	s.bind((HOST,PORT))
+	s.listen(1)
+	conn, addr = s.accept()
+	print 'Connected by', addr
+	return conn
+def connects():
+	HOST = '127.0.0.1'	# The remote host
+	PORT = 50007			  # The same port as used by the server
+	s = socket.socket()
+	s.connect((HOST,PORT))
+	return s
+	
 def main():
 	"""Main fuction that sets up variables and contains the main loop"""
 #Initialize Everything
@@ -160,6 +174,10 @@ def main():
 	menu = 1
 	playing = 0
 	page = 0 #
+	bind = 0
+	connect = 0
+	bound = 0
+	connected = 0
 #players
 	playerfile = open("players","r")
 	players = []
@@ -167,6 +185,7 @@ def main():
 	for i in range(6):
 		players.append("".join(re.findall("[a-zA-Z]+",playerlist[i])))
 	#print players
+	player = open("player1.txt","w")
 #Main Game Loop
 	while 1:
 		clock.tick(10)
@@ -182,6 +201,10 @@ def main():
 					if (event.key == player2.right
 					or event.key == player2.left):
 						player2.MoveKeyDown(event.key)
+					if event.key == K_b:
+						bind = 1
+					if event.key == K_c:
+						connect = 1
 				elif event.type == KEYUP:
 					if (event.key == player1.right
 					or event.key == player1.left):
@@ -190,11 +213,13 @@ def main():
 					or event.key == player2.left):
 						player2.MoveKeyUp(event.key)
 			allsprites.update()
+			
+			cPickle.dump(player1,player)
 			#Draw Everything
 			screen.blit(background, (0, 0))
 			allsprites.draw(screen)
 			pygame.display.flip()
-		elif menu:
+		if menu:
 			for event in pygame.event.get():
 				if event.type == QUIT:
 					return
@@ -238,6 +263,23 @@ def main():
 				background.fill((0, 0, 0))
 			screen.blit(background, (0, 0))
 			pygame.display.flip()
+		if bind:
+			if not bound:
+				conn = binds()
+				bound = 1
+			
+			player2 = cPickle.load(conn.recv(1024))
+			#cPickle.dumps(player1)
+			conn.send(cPickle.dumps(player1))
+			print player2
+		if connect:
+			if not connected:
+				s = connects()
+
+			s.send(cPickle.dumps(player2))
+			player1 = cPickle.load(s.recv(1024))
+			print player1
+			#print 'Received', repr(data)
 
 if __name__ == '__main__': main()
 #new lines so i can scroll down farther
