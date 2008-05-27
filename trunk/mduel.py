@@ -46,6 +46,7 @@ class Player(pygame.sprite.Sprite):
 		self.current = 0
 		self.running=0
 		self.dir = 0
+		self.name = "Unset"
 	def setKeys(self, right = K_RIGHT, left = K_LEFT):
 		"""Sets the keys for the player object"""
 		self.right = right
@@ -184,6 +185,8 @@ def main():
 	playerlist = playerfile.readlines()
 	for i in range(6):
 		players.append("".join(re.findall("[a-zA-Z]+",playerlist[i])))
+	player1.name = players[0]
+	player2.name = players[1]
 	#print players
 	#player = open("player1.txt","w")
 #Main Game Loop
@@ -236,12 +239,16 @@ def main():
 							selector.move(event.key)
 						elif event.key == K_RETURN:
 							if getMenuItem(selector.y) == 0:
-								page=10
+								page=9
+								background.fill((0, 0, 0))
 							elif getMenuItem(selector.y) == 2:
 								page = 2
 								background.fill((0, 0, 0))
 							elif getMenuItem(selector.y) == 6:
 								return
+					elif page is 9:
+						if event.key == K_SPACE:
+							page = 10
 						
 			if page is 0:
 				background.blit(introimage, (0, 0))
@@ -257,6 +264,10 @@ def main():
 					text = font.render(players[i], 0, (164, 64, 164))
 					#textpos = text.get_rect(centerx=background.get_width()/2)
 					background.blit(text, (0,30*i))
+			elif page is 9:
+				text = font.render(player1.name+" VS "+player2.name, 0, (164, 64, 164))
+				pos = text.get_rect(centerx=background.get_width()/2,centery=background.get_height()/2)
+				background.blit(text, pos)
 			elif page is 10:
 				playing = 1
 				menu = 0
