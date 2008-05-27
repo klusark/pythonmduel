@@ -3,7 +3,7 @@
 Mduel
 """
 #Import Modules
-import os, pygame
+import os, pygame, re
 from pygame.locals import *
 #function to create our resources
 def loadImage(name, rect, colorkey=None):
@@ -70,7 +70,6 @@ class Player(pygame.sprite.Sprite):
 		self.running = 0
 		self.current = 0
 	def update(self):
-		#print pygame.event.peek(event.key)
 		if self.running:
 			if self.current == len(self.runframe)-1:
 				self.current = 0
@@ -160,7 +159,14 @@ def main():
 #Odds and ends
 	menu = 1
 	playing = 0
-	page = 0
+	page = 0 #
+#players
+	playerfile = open("players","r")
+	players = []
+	playerlist = playerfile.readlines()
+	for i in range(6):
+		players.append("".join(re.findall("[a-zA-Z]+",playerlist[i])))
+	#print players
 #Main Game Loop
 	while 1:
 		clock.tick(10)
@@ -206,7 +212,10 @@ def main():
 						elif event.key == K_RETURN:
 							if getMenuItem(selector.y) == 0:
 								page=10
-							if getMenuItem(selector.y) == 6:
+							elif getMenuItem(selector.y) == 2:
+								page = 2
+								background.fill((0, 0, 0))
+							elif getMenuItem(selector.y) == 6:
 								return
 						
 			if page is 0:
@@ -218,6 +227,11 @@ def main():
 				#text = font.render("Begin Match", 0, (164, 64, 164))
 				#textpos = text.get_rect(centerx=background.get_width()/2)
 				#background.blit(text, textpos)
+			elif page is 2:
+				for i in range(len(players)):
+					text = font.render(players[i], 0, (164, 64, 164))
+					#textpos = text.get_rect(centerx=background.get_width()/2)
+					background.blit(text, (0,30*i))
 			elif page is 10:
 				playing = 1
 				menu = 0
