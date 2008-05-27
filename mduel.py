@@ -185,7 +185,7 @@ def main():
 	for i in range(6):
 		players.append("".join(re.findall("[a-zA-Z]+",playerlist[i])))
 	#print players
-	player = open("player1.txt","w")
+	#player = open("player1.txt","w")
 #Main Game Loop
 	while 1:
 		clock.tick(10)
@@ -214,7 +214,7 @@ def main():
 						player2.MoveKeyUp(event.key)
 			allsprites.update()
 			
-			cPickle.dump(player1,player)
+			#cPickle.dump(player1,player)
 			#Draw Everything
 			screen.blit(background, (0, 0))
 			allsprites.draw(screen)
