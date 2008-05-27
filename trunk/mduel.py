@@ -38,8 +38,8 @@ class Player(pygame.sprite.Sprite):
 		self.stand, self.rect = loadImage('stand.png', 1,-1)
 		self.image = self.stand
 		"""Set the number of Pixels to move each time"""
-		self.x_dist = 3
-		self.y_dist = 3 
+		self.x_dist = 6
+		self.y_dist = 6 
 		"""Initialize how much we are moving"""
 		self.xMove = 0
 		self.yMove = 0
@@ -52,23 +52,25 @@ class Player(pygame.sprite.Sprite):
 		self.left = left
 	def MoveKeyDown(self, key):
 		"""Event fuction for when any keys bound to the current player object are hit"""
-		self.running = 1
+		
 		if key == self.right:
-			self.xMove += self.x_dist
+			self.xMove = self.x_dist
 			self.dir = 0
 		elif key == self.left:
-			self.xMove += -self.x_dist
+			self.xMove = -self.x_dist
 			self.dir = 1
+		self.running = 1
 
 	def MoveKeyUp(self, key):
-		"""Event fuction for when any keys bound to the current player object are hit"""
+		"""Event fuction for when any keys bound to the current player object are let go of"""
 		if key == self.right:
-			self.xMove += -self.x_dist
+			self.xMove = 0
 		elif key == self.left:
-			self.xMove += self.x_dist
+			self.xMove = 0
 		self.running = 0
 		self.current = 0
 	def update(self):
+		#print pygame.event.peek(event.key)
 		if self.running:
 			if self.current == len(self.runframe)-1:
 				self.current = 0
@@ -94,7 +96,6 @@ class Selector(pygame.sprite.Sprite):
 	def __init__(self):
 		pygame.sprite.Sprite.__init__(self)
 		self.image, self.rect = loadImage('selector.png', 1, -1)
-		#size = 
 		self.y=94
 		self.rect.move_ip(212, self.y)
 		
@@ -168,13 +169,10 @@ def main():
 			for event in pygame.event.get():
 				if event.type == QUIT:
 					return
-				elif event.type == KEYDOWN and event.key == K_ESCAPE:
-					return
 				elif event.type == KEYDOWN:
 					if (event.key == player1.right
 					or event.key == player1.left):
 						player1.MoveKeyDown(event.key)
-						player1.running = 1
 					if (event.key == player2.right
 					or event.key == player2.left):
 						player2.MoveKeyDown(event.key)
