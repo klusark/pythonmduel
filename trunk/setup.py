@@ -1,0 +1,7 @@
+from distutils.core import setup
+from sys import argv
+from shutil import copytree
+import py2exe
+argv[1:] = ["py2exe","-O2"] + argv[1:]
+setup(windows=['mduel.py'])
+copytree("data", "dist/data")
