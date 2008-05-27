@@ -223,9 +223,12 @@ def main():
 #players
 	playerfile = open("players","r")
 	players = []
+	playerinfo = []
 	playerlist = playerfile.readlines()
 	for i in range(6):
 		players.append("".join(re.findall("[a-zA-Z]+",playerlist[i])))
+		playerinfo.append(re.findall("[-0-9]+",playerlist[i]))
+	#print playerinfo
 	player1.name = players[0]
 	player2.name = players[1]
 	#print players
@@ -306,10 +309,24 @@ def main():
 			elif page is 2:
 				for i in range(len(players)):
 					text = font.render(players[i], 0, (164, 64, 164))
-					#textpos = text.get_rect(centerx=background.get_width()/2)
-					background.blit(text, (0,30*i))
+					background.blit(text, (0,160+40*i))
+				for i in range(len(players)):
+					text = font.render(playerinfo[0][i], 0, (164, 64, 164))
+					background.blit(text, (0,160+40*i))
+				text = font.render("Name", 0, (255, 255, 255))
+				background.blit(text, (0,140))
+				text = font.render("Rank", 0, (255, 255, 255))
+				background.blit(text, (150,140))
+				text = font.render("W", 0, (255, 255, 255))
+				background.blit(text, (200,140))
+				text = font.render("L", 0, (255, 255, 255))
+				background.blit(text, (250,140))
+				text = font.render("S", 0, (255, 255, 255))
+				background.blit(text, (300,140))
+				text = font.render("FIDS", 0, (255, 255, 255))
+				background.blit(text, (350,140))
 			elif page is 9:
-				text = font.render(player1.name+" VS "+player2.name, 0, (164, 64, 164))
+				text = font.render(player1.name+" vs. "+player2.name, 0, (164, 64, 164))
 				pos = text.get_rect(centerx=background.get_width()/2,centery=background.get_height()/2)
 				background.blit(text, pos)
 			elif page is 10:
