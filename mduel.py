@@ -3,7 +3,7 @@
 Mduel
 """
 #Import Modules
-import os, pygame, re, socket, cPickle
+import os, pygame, re, socket, cPickle, PixelPerfect
 from pygame.locals import *
 #function to create our resources
 def loadImage(name, rect, colorkey=None):
@@ -47,6 +47,9 @@ class Player(pygame.sprite.Sprite):
 		self.running=0
 		self.dir = 0
 		self.name = "Unset"
+		self.hitmask = pygame.surfarray.array_colorkey(self.image)
+		self.image.unlock()
+		self.image.unlock()
 	def setKeys(self, right = K_RIGHT, left = K_LEFT):
 		"""Sets the keys for the player object"""
 		self.right = right
@@ -89,6 +92,31 @@ class Platform(pygame.sprite.Sprite):
 		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
 		self.image, self.rect = loadImage('platform.png', 1, -1)
 		self.rect.move_ip(x, y)
+
+class Mallow(pygame.sprite.Sprite):
+	"""Mallow Sprite"""
+	def __init__(self,x,y):
+		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
+		self.image, self.rect = loadImage('mallow.png', 1)
+		self.rect.move_ip(x, y)
+		
+class MallowAnm(pygame.sprite.Sprite):
+	"""MallowAnm Sprite"""
+	def __init__(self,x,y,frame):
+		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
+		self.image, self.rect = loadImage('mallow0.png', 1, -1)
+		self.rect.move_ip(x, y)
+		self.anmframe = []
+		for i in range(4):
+			image = loadImage("mallow"+str(i)+".png",0,-1)
+			self.anmframe.append(image)
+		self.current = frame
+	def update(self):
+		if self.current == len(self.anmframe)-1:
+			self.current = 0
+		else:
+			self.current += 1
+		self.image = self.anmframe[self.current]
 
 class Selector(pygame.sprite.Sprite):
 	"""The selector on menup2"""
@@ -167,8 +195,21 @@ def main():
 	platform = []
 	for i in range(5):
 		platform.append(Platform(i*32,100))
+	mallow = []
+	for i in range(22):
+		platform.append(Mallow(i*(15*2),400-(15*2)))
+	#mallows = MallowAnm()
+	mallows = []
+	frame = 0
+	for i in range(20):
+		if frame == 4:
+			frame = 0
+		platform.append(MallowAnm(i*(16*2),400-16-30,frame))
+		frame +=1
 	#platform = Platform(0,100)
-	allsprites = pygame.sprite.RenderPlain((player1,player2,platform))
+	allsprites = pygame.sprite.RenderPlain((player1,player2,platform, mallows))
+	playerGroup = pygame.sprite.Group()
+	playerGroup.add(player1,player2)
 	selector = Selector()
 	selectorRender = pygame.sprite.RenderUpdates(selector)
 #Odds and ends
@@ -189,6 +230,7 @@ def main():
 	player2.name = players[1]
 	#print players
 	#player = open("player1.txt","w")
+	#player.write(player1)
 #Main Game Loop
 	while 1:
 		clock.tick(10)
@@ -204,6 +246,8 @@ def main():
 					if (event.key == player2.right
 					or event.key == player2.left):
 						player2.MoveKeyDown(event.key)
+					if event.key == K_DOWN:
+						player1.yMove = 1
 					if event.key == K_b:
 						bind = 1
 					if event.key == K_c:
@@ -216,7 +260,7 @@ def main():
 					or event.key == player2.left):
 						player2.MoveKeyUp(event.key)
 			allsprites.update()
-			
+			print PixelPerfect.spritecollide_pp(player1,playerGroup ,0)
 			#cPickle.dump(player1,player)
 			#Draw Everything
 			screen.blit(background, (0, 0))

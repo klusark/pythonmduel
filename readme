@@ -1,4 +1,4 @@
-Make sure python and pygame are installed.
+Make sure python and pygame are installed. Numeric is needed for Pixel perfict colitions
 Run: python mduel.py
 
 To make binary distribution use setup.py
