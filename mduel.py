@@ -3,7 +3,7 @@
 Mduel
 """
 #Import Modules
-import os, pygame, re, socket, cPickle, PixelPerfect
+import os, pygame, re, socket, cPickle, PixelPerfect, random
 from pygame.locals import *
 #function to create our resources
 def loadImage(name, rect, colorkey=None):
@@ -181,7 +181,7 @@ def pickelForSending(player):
 	return cPickle.dumps(pickle)
 	
 def depickelForRecving(pickle, player):
-	print pickle
+	#print pickle
 	pickle = cPickle.loads(pickle)
 	player.xMove = pickle.xMove
 	player.yMove = pickle.yMove
@@ -189,7 +189,54 @@ def depickelForRecving(pickle, player):
 	player.running = pickle.running
 	player.dir = pickle.dir
 	return player
-
+def generateBricks():
+	"""Taken from MDuel DS and modifyed
+	void gameManager::generateBricks()
+	{
+		u16 tileGFX = loadGFX(tileSprite.spriteData, OBJ_SIZE_16X16, 1);
+		for (int i=0; i < 51; ++i)
+		{
+			floorTile *temp = new floorTile(this);
+			temp->setPallete(tileSprite.palleteID);
+			temp->giveGFX(tileGFX, OBJ_SIZE_16X16, 8, 8, 0, OFFX, OFFY);
+			
+			if (i<3)
+				temp->setPos(i*16+24, 192-32+8);
+			else if (i<6)
+				temp->setPos(256-24-((i-3)*16), 192-32+8);
+			else if (i>47)
+				temp->setPos(256-16-8-((i-47)*16), 192-32+8+4*-32);
+			else if (i>44)
+				temp->setPos((i-45)*16+16+16+8, 192-32+8+4*-32);
+			else {
+				u8 j = i-6;
+				u8 col = j%13;
+				u8 row = j/13;
+				if (PA_RandMax(10) < 7 || (
+					(gameSprites.size()-2 > 0 && gameSprites[gameSprites.size()-2]->getx() > 0) && 
+					(gameSprites.size()-3 > 0 && gameSprites[gameSprites.size()-3]->getx() < 0) ))
+					temp->setPos((col+1)*16+16, 192-32+8+((row+1)*-32));
+			}
+			temp->makeStatic();
+		}
+	}"""
+	platform = []
+	for i in range(51):
+		if (i<3):
+			platform.append(Platform(i*32+24, 192-32+8))
+		elif (i<6):
+			platform.append(Platform(256-24-((i-3)*32), 192-32+8))
+		elif (i>47):
+			platform.append(Platform(256-32-8-((i-47)*32), 192-32+8+4*-32))
+		elif (i>44):
+			platform.append(Platform((i-45)*32+32+32+16, 192-32+16+8*-32))
+		else:
+			j = i-6;
+			col = j%13;
+			row = j/13;
+			if (random.randint(0,10) < 7):
+				platform.append(Platform((col+1)*32+32, 192-32+16+((row+1)*-32)))
+	return platform
 def main():
 	"""Main fuction that sets up variables and contains the main loop"""
 #Initialize Everything
@@ -218,9 +265,9 @@ def main():
 	#background.blit(text, textpos)
 #Prepare Game Objects
 	clock = pygame.time.Clock()
-	platform = []
-	for i in range(5):
-		platform.append(Platform(i*32,100))
+	platform = generateBricks()
+	#for i in range(5):
+	#	platform.append(Platform(i*32,100))
 	groundGroup = pygame.sprite.Group()
 	groundGroup.add(platform)
 	player1 = Player()
@@ -230,17 +277,17 @@ def main():
 
 	mallow = []
 	for i in range(22):
-		platform.append(Mallow(i*(15*2),400-(15*2)))
+		mallow.append(Mallow(i*(15*2),400-(15*2)))
 	#mallows = MallowAnm()
 	mallows = []
 	frame = 0
 	for i in range(20):
 		if frame == 4:
 			frame = 0
-		platform.append(MallowAnm(i*(16*2),400-16-30,frame))
+		mallows.append(MallowAnm(i*(16*2),400-16-30,frame))
 		frame +=1
 	#platform = Platform(0,100)
-	allsprites = pygame.sprite.RenderPlain((player1,player2,platform, mallows))
+	allsprites = pygame.sprite.RenderPlain((player1, player2, platform, mallows, mallow))
 	playerGroup = pygame.sprite.Group()
 	playerGroup.add(player1,player2)
 
@@ -296,7 +343,6 @@ def main():
 			allsprites.update()
 			#if PixelPerfect.spritecollideany_pp(player1,groundGroup):
 			#	player1.yMove=0
-			#cPickle.dump(player1,player)
 			#Draw Everything
 			screen.blit(background, (0, 0))
 			allsprites.draw(screen)
@@ -371,7 +417,6 @@ def main():
 			if not bound:
 				conn = binds()
 				bound = 1
-			
 			player2 = depickelForRecving(conn.recv(1024),player2)
 			conn.send(pickelForSending(player1))
 			#print player2
