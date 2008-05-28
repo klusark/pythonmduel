@@ -84,6 +84,7 @@ class Player(pygame.sprite.Sprite):
 			self.image = pygame.transform.flip(self.image, 1, 0)
 		#if self.xMove > 0:
 		#	self.xMove -= 1
+
 		self.rect.move_ip(self.xMove,self.yMove)
 
 class Platform(pygame.sprite.Sprite):
@@ -92,6 +93,9 @@ class Platform(pygame.sprite.Sprite):
 		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
 		self.image, self.rect = loadImage('platform.png', 1, -1)
 		self.rect.move_ip(x, y)
+		self.hitmask = pygame.surfarray.array_colorkey(self.image)
+		self.image.unlock()
+		self.image.unlock()
 
 class Mallow(pygame.sprite.Sprite):
 	"""Mallow Sprite"""
@@ -141,6 +145,13 @@ class Selector(pygame.sprite.Sprite):
 			self.rect.move_ip(0,-210)
 			self.y=94
 
+class SendPlayer():
+	def __init__(self):
+		self.xMove = 0
+		self.yMove = 0
+		self.current = 0
+		self.running = 0
+		self.dir = 0
 def getMenuItem(y):
 	"""simple fuction to tell the item number on the main menu"""
 	return (y-94)/30
@@ -159,7 +170,26 @@ def connects():
 	s = socket.socket()
 	s.connect((HOST,PORT))
 	return s
+def pickelForSending(player):
+	pickle = SendPlayer()
+	pickle.xMove =  player.xMove
+	pickle.yMove =  player.yMove
+	pickle.current =  player.current
+	pickle.running =  player.running
+	pickle.dir =  player.dir
+	#print cPickle.dumps(pickle)
+	return cPickle.dumps(pickle)
 	
+def depickelForRecving(pickle, player):
+	print pickle
+	pickle = cPickle.loads(pickle)
+	player.xMove = pickle.xMove
+	player.yMove = pickle.yMove
+	player.current = pickle.current
+	player.running = pickle.running
+	player.dir = pickle.dir
+	return player
+
 def main():
 	"""Main fuction that sets up variables and contains the main loop"""
 #Initialize Everything
@@ -188,13 +218,16 @@ def main():
 	#background.blit(text, textpos)
 #Prepare Game Objects
 	clock = pygame.time.Clock()
+	platform = []
+	for i in range(5):
+		platform.append(Platform(i*32,100))
+	groundGroup = pygame.sprite.Group()
+	groundGroup.add(platform)
 	player1 = Player()
 	player1.setKeys()
 	player2 = Player()
 	player2.setKeys(K_d,K_a)
-	platform = []
-	for i in range(5):
-		platform.append(Platform(i*32,100))
+
 	mallow = []
 	for i in range(22):
 		platform.append(Mallow(i*(15*2),400-(15*2)))
@@ -210,6 +243,7 @@ def main():
 	allsprites = pygame.sprite.RenderPlain((player1,player2,platform, mallows))
 	playerGroup = pygame.sprite.Group()
 	playerGroup.add(player1,player2)
+
 	selector = Selector()
 	selectorRender = pygame.sprite.RenderUpdates(selector)
 #Odds and ends
@@ -228,12 +262,9 @@ def main():
 	for i in range(6):
 		players.append("".join(re.findall("[a-zA-Z]+",playerlist[i])))
 		playerinfo.append(re.findall("[-0-9]+",playerlist[i]))
-	#print playerinfo
+
 	player1.name = players[0]
 	player2.name = players[1]
-	#print players
-	#player = open("player1.txt","w")
-	#player.write(player1)
 #Main Game Loop
 	while 1:
 		clock.tick(10)
@@ -250,7 +281,7 @@ def main():
 					or event.key == player2.left):
 						player2.MoveKeyDown(event.key)
 					if event.key == K_DOWN:
-						player1.yMove = 1
+						player1.yMove = 5
 					if event.key == K_b:
 						bind = 1
 					if event.key == K_c:
@@ -263,7 +294,8 @@ def main():
 					or event.key == player2.left):
 						player2.MoveKeyUp(event.key)
 			allsprites.update()
-			print PixelPerfect.spritecollide_pp(player1,playerGroup ,0)
+			#if PixelPerfect.spritecollideany_pp(player1,groundGroup):
+			#	player1.yMove=0
 			#cPickle.dump(player1,player)
 			#Draw Everything
 			screen.blit(background, (0, 0))
@@ -340,17 +372,17 @@ def main():
 				conn = binds()
 				bound = 1
 			
-			player2 = cPickle.load(conn.recv(1024))
-			#cPickle.dumps(player1)
-			conn.send(cPickle.dumps(player1))
-			print player2
+			player2 = depickelForRecving(conn.recv(1024),player2)
+			conn.send(pickelForSending(player1))
+			#print player2
 		if connect:
 			if not connected:
 				s = connects()
+				connected=1
 
-			s.send(cPickle.dumps(player2))
-			player1 = cPickle.load(s.recv(1024))
-			print player1
+			s.send(pickelForSending(player2))
+			player1 = depickelForRecving(s.recv(1024),player1)
+			#print player1
 			#print 'Received', repr(data)
 
 if __name__ == '__main__': main()
