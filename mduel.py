@@ -3,7 +3,9 @@
 Mduel
 """
 #Import Modules
-import os, pygame, re, socket, cPickle, PixelPerfect, random
+import os, pygame, re, socket, cPickle, PixelPerfect
+from random import randint
+from zlib import compress, decompress
 from pygame.locals import *
 #function to create our resources
 def loadImage(name, rect, colorkey=None):
@@ -156,6 +158,7 @@ def getMenuItem(y):
 	"""simple fuction to tell the item number on the main menu"""
 	return (y-94)/30
 def binds():
+	"""Makes the curret player wait for a connection from another player"""
 	HOST = ''				# Symbolic name meaning the local host
 	PORT = 50007			# Arbitrary non-privileged port
 	s = socket.socket()
@@ -164,12 +167,14 @@ def binds():
 	conn, addr = s.accept()
 	print 'Connected by', addr
 	return conn
+
 def connects():
 	HOST = '127.0.0.1'	# The remote host
 	PORT = 50007			  # The same port as used by the server
 	s = socket.socket()
 	s.connect((HOST,PORT))
 	return s
+
 def pickelForSending(player):
 	pickle = SendPlayer()
 	pickle.xMove =  player.xMove
@@ -177,11 +182,11 @@ def pickelForSending(player):
 	pickle.current =  player.current
 	pickle.running =  player.running
 	pickle.dir =  player.dir
-	#print cPickle.dumps(pickle)
-	return cPickle.dumps(pickle)
+	dump = cPickle.dumps(pickle)
+	return compress(dump)
 	
 def depickelForRecving(pickle, player):
-	#print pickle
+	pickle = decompress(pickle)
 	pickle = cPickle.loads(pickle)
 	player.xMove = pickle.xMove
 	player.yMove = pickle.yMove
@@ -189,6 +194,7 @@ def depickelForRecving(pickle, player):
 	player.running = pickle.running
 	player.dir = pickle.dir
 	return player
+
 def generateBricks():
 	"""Taken from MDuel DS and modifyed
 	void gameManager::generateBricks()
@@ -234,7 +240,7 @@ def generateBricks():
 			j = i-6;
 			col = j%13;
 			row = j/13;
-			if (random.randint(0,10) < 7):
+			if (randint(0,10) < 7):
 				platform.append(Platform((col+1)*32+32, 192-32+16+((row+1)*-32)))
 	return platform
 def main():
@@ -417,18 +423,15 @@ def main():
 			if not bound:
 				conn = binds()
 				bound = 1
-			player2 = depickelForRecving(conn.recv(1024),player2)
+			player2 = depickelForRecving(conn.recv(512),player2)
 			conn.send(pickelForSending(player1))
-			#print player2
 		if connect:
 			if not connected:
 				s = connects()
 				connected=1
 
 			s.send(pickelForSending(player2))
-			player1 = depickelForRecving(s.recv(1024),player1)
-			#print player1
-			#print 'Received', repr(data)
+			player1 = depickelForRecving(s.recv(512),player1)
 
 if __name__ == '__main__': main()
 #new lines so i can scroll down farther
