@@ -3,13 +3,15 @@
 Mduel
 """
 #Import Modules
-import os, pygame, re, socket, cPickle, PixelPerfect
+import os, pygame, socket, cPickle, PixelPerfect
+from os import path
+from re import findall
 from random import randint
 from zlib import compress, decompress
 from pygame.locals import *
 #function to create our resources
 def loadImage(name, rect, colorkey=None):
-	fullname = os.path.join('data', name)
+	fullname = path.join('data', name)
 	try:
 		image = pygame.image.load(fullname)
 	except pygame.error, message:
@@ -30,7 +32,7 @@ def loadImage(name, rect, colorkey=None):
 #classes for our game objects
 class Player(pygame.sprite.Sprite):
 	"""The Payer class"""
-	def __init__(self):
+	def __init__(self,x=0,y=0):
 		"""Initializes Player class"""
 		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
 		self.runframe=[]
@@ -39,6 +41,7 @@ class Player(pygame.sprite.Sprite):
 			self.runframe.append(image)
 		self.stand, self.rect = loadImage('stand.png', 1,-1)
 		self.image = self.stand
+		self.rect.move_ip(x,y)
 		"""Set the number of Pixels to move each time"""
 		self.x_dist = 6
 		self.y_dist = 6 
@@ -84,6 +87,7 @@ class Player(pygame.sprite.Sprite):
 			self.image = self.stand
 		if self.dir==1:
 			self.image = pygame.transform.flip(self.image, 1, 0)
+		#print self.rect.collidelistall()
 		#if self.xMove > 0:
 		#	self.xMove -= 1
 
@@ -146,6 +150,13 @@ class Selector(pygame.sprite.Sprite):
 		elif self.y == 304:
 			self.rect.move_ip(0,-210)
 			self.y=94
+class Rope(pygame.sprite.Sprite):
+	"""The rope"""
+	def __init__(self,x,y,len):
+		pygame.sprite.Sprite.__init__(self)
+		self.image, self.rect = loadImage('rope.png', 1)
+		self.rect.move_ip(x, y)
+		self.image = pygame.transform.scale(self.image,(1,16*len))
 
 class SendPlayer():
 	def __init__(self):
@@ -229,20 +240,49 @@ def generateBricks():
 	platform = []
 	for i in range(51):
 		if (i<3):
-			platform.append(Platform(i*32+24, 192-32+8))
+			platform.append(Platform((i*16+24)*2, (192-32+8)*2))
 		elif (i<6):
-			platform.append(Platform(256-24-((i-3)*32), 192-32+8))
+			platform.append(Platform((256-24-((i-3)*16))*2, (192-32+8)*2))
 		elif (i>47):
-			platform.append(Platform(256-32-8-((i-47)*32), 192-32+8+4*-32))
+			platform.append(Platform((256-16-8-((i-47)*16))*2, (192-32+8+4*-32)*2))
 		elif (i>44):
-			platform.append(Platform((i-45)*32+32+32+16, 192-32+16+8*-32))
+			platform.append(Platform(((i-45)*16+16+16+8)*2, (192-32+8+4*-32)*2))
 		else:
 			j = i-6;
 			col = j%13;
 			row = j/13;
 			if (randint(0,10) < 7):
-				platform.append(Platform((col+1)*32+32, 192-32+16+((row+1)*-32)))
+				platform.append(Platform(((col+1)*16+16)*2, (192-32+8+((row+1)*-32))*2))
 	return platform
+
+def generateRopes():
+	"""Taken from MDuel DS and modifyed
+	void gameManager::generateRopes()
+	{
+		u16 ropeHeadGFX = loadGFX(tileSprite.spriteData, OBJ_SIZE_16X16, 1);
+		u16 ropeGFX = loadGFX(tileSprite.spriteData, OBJ_SIZE_16X16, 1);
+		
+		Rope *r1 = new Rope(this);
+		r1->setPallete(tileSprite.palleteID);
+		r1->giveGFX(ropeHeadGFX, OBJ_SIZE_16X16, 8, 8);
+		r1->childGFX = ropeGFX;
+		r1->setPos(56, 3);
+		r1->setLength(9);
+		r1->makeStatic();
+		
+		Rope *r2 = new Rope(this);
+		r2->setPallete(tileSprite.palleteID);
+		r2->giveGFX(ropeHeadGFX, OBJ_SIZE_16X16, 8, 8);
+		r2->childGFX = ropeGFX;
+		r2->setPos(256-56, 3);
+		r2->setLength(9);
+		r2->makeStatic();
+	}"""
+	rope = []
+	rope.append(Rope(56*2, 3*2, 9*2))
+	rope.append(Rope((256-56)*2, 3*2, 9*2))
+	return rope
+	
 def main():
 	"""Main fuction that sets up variables and contains the main loop"""
 #Initialize Everything
@@ -272,15 +312,15 @@ def main():
 #Prepare Game Objects
 	clock = pygame.time.Clock()
 	platform = generateBricks()
-	#for i in range(5):
-	#	platform.append(Platform(i*32,100))
-	groundGroup = pygame.sprite.Group()
-	groundGroup.add(platform)
-	player1 = Player()
+	#groundGroup = pygame.sprite.Group()
+	#groundGroup.add(platform)
+	player1 = Player(39,288)
 	player1.setKeys()
-	player2 = Player()
+	player2 = Player(457,288)
+	player2.dir = 1
 	player2.setKeys(K_d,K_a)
-
+	rope = generateRopes()
+	#print platform
 	mallow = []
 	for i in range(22):
 		mallow.append(Mallow(i*(15*2),400-(15*2)))
@@ -293,7 +333,7 @@ def main():
 		mallows.append(MallowAnm(i*(16*2),400-16-30,frame))
 		frame +=1
 	#platform = Platform(0,100)
-	allsprites = pygame.sprite.RenderPlain((player1, player2, platform, mallows, mallow))
+	allsprites = pygame.sprite.RenderPlain((player1, player2, platform, mallows, mallow, rope))
 	playerGroup = pygame.sprite.Group()
 	playerGroup.add(player1,player2)
 
@@ -313,8 +353,8 @@ def main():
 	playerinfo = []
 	playerlist = playerfile.readlines()
 	for i in range(6):
-		players.append("".join(re.findall("[a-zA-Z]+",playerlist[i])))
-		playerinfo.append(re.findall("[-0-9]+",playerlist[i]))
+		players.append("".join(findall("[a-zA-Z]+",playerlist[i])))
+		playerinfo.append(findall("[-0-9]+",playerlist[i]))
 
 	player1.name = players[0]
 	player2.name = players[1]
@@ -347,8 +387,9 @@ def main():
 					or event.key == player2.left):
 						player2.MoveKeyUp(event.key)
 			allsprites.update()
-			#if PixelPerfect.spritecollideany_pp(player1,groundGroup):
-			#	player1.yMove=0
+			if len(PixelPerfect.spritecollide_pp(player1,playerGroup, 0)) == 2:
+				print "Colides"
+			
 			#Draw Everything
 			screen.blit(background, (0, 0))
 			allsprites.draw(screen)
