@@ -2,14 +2,17 @@
 """
 Mduel
 """
+
 #Import Modules
-import os, pygame, socket, cPickle, PixelPerfect
+import pygame, cPickle, PixelPerfect
+from socket import socket
 from os import path
 from re import findall
 from random import randint
 from zlib import compress, decompress
 from pygame.locals import *
 #function to create our resources
+
 def loadImage(name, rect, colorkey=None):
 	fullname = path.join('data', name)
 	try:
@@ -28,17 +31,24 @@ def loadImage(name, rect, colorkey=None):
 	else:
 		return image, image.get_rect()
 	
-
 #classes for our game objects
 class Player(pygame.sprite.Sprite):
 	"""The Payer class"""
-	def __init__(self,x=0,y=0):
+	def __init__(self, x = 0, y = 0):
 		"""Initializes Player class"""
 		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
 		self.runframe=[]
 		for i in range(4):
 			image = loadImage("run"+str(i)+".png",0,-1)
 			self.runframe.append(image)
+		self.fallforwards=[]
+		for i in range(2):
+			image = loadImage("fallforwards"+str(i)+".png",0,-1)
+			self.fallforwards.append(image)
+		self.fallback=[]
+		for i in range(2):
+			image = loadImage("fallback"+str(i)+".png",0,-1)
+			self.fallback.append(image)
 		self.stand, self.rect = loadImage('stand.png', 1,-1)
 		self.image = self.stand
 		self.rect.move_ip(x,y)
@@ -55,10 +65,12 @@ class Player(pygame.sprite.Sprite):
 		self.hitmask = pygame.surfarray.array_colorkey(self.image)
 		self.image.unlock()
 		self.image.unlock()
+
 	def setKeys(self, right = K_RIGHT, left = K_LEFT):
 		"""Sets the keys for the player object"""
 		self.right = right
 		self.left = left
+
 	def MoveKeyDown(self, key):
 		"""Event fuction for when any keys bound to the current player object are hit"""
 		
@@ -75,6 +87,7 @@ class Player(pygame.sprite.Sprite):
 		self.xMove = 0
 		self.running = 0
 		self.current = 0
+
 	def update(self):
 		if self.running:
 			if self.current == len(self.runframe)-1:
@@ -90,9 +103,12 @@ class Player(pygame.sprite.Sprite):
 		#print self.rect.collidelistall()
 		#if self.xMove > 0:
 		#	self.xMove -= 1
-
 		self.rect.move_ip(self.xMove,self.yMove)
 
+	def collide(self, otherdir, speed):
+		"""Acts on collitions"""
+		print otherdir, speed
+	
 class Platform(pygame.sprite.Sprite):
 	"""Platform Sprite"""
 	def __init__(self,x,y):
@@ -121,6 +137,7 @@ class MallowAnm(pygame.sprite.Sprite):
 			image = loadImage("mallow"+str(i)+".png",0,-1)
 			self.anmframe.append(image)
 		self.current = frame
+
 	def update(self):
 		if self.current == len(self.anmframe)-1:
 			self.current = 0
@@ -150,6 +167,7 @@ class Selector(pygame.sprite.Sprite):
 		elif self.y == 304:
 			self.rect.move_ip(0,-210)
 			self.y=94
+
 class Rope(pygame.sprite.Sprite):
 	"""The rope"""
 	def __init__(self,x,y,len):
@@ -159,15 +177,18 @@ class Rope(pygame.sprite.Sprite):
 		self.image = pygame.transform.scale(self.image,(1,16*len))
 
 class SendPlayer():
+	"""Class for information being sent"""
 	def __init__(self):
 		self.xMove = 0
 		self.yMove = 0
 		self.current = 0
 		self.running = 0
 		self.dir = 0
+
 def getMenuItem(y):
-	"""simple fuction to tell the item number on the main menu"""
+	"""Simple fuction to tell the item number on the main menu"""
 	return (y-94)/30
+
 def binds():
 	"""Makes the curret player wait for a connection from another player"""
 	HOST = ''				# Symbolic name meaning the local host
@@ -256,28 +277,7 @@ def generateBricks():
 	return platform
 
 def generateRopes():
-	"""Taken from MDuel DS and modifyed
-	void gameManager::generateRopes()
-	{
-		u16 ropeHeadGFX = loadGFX(tileSprite.spriteData, OBJ_SIZE_16X16, 1);
-		u16 ropeGFX = loadGFX(tileSprite.spriteData, OBJ_SIZE_16X16, 1);
-		
-		Rope *r1 = new Rope(this);
-		r1->setPallete(tileSprite.palleteID);
-		r1->giveGFX(ropeHeadGFX, OBJ_SIZE_16X16, 8, 8);
-		r1->childGFX = ropeGFX;
-		r1->setPos(56, 3);
-		r1->setLength(9);
-		r1->makeStatic();
-		
-		Rope *r2 = new Rope(this);
-		r2->setPallete(tileSprite.palleteID);
-		r2->giveGFX(ropeHeadGFX, OBJ_SIZE_16X16, 8, 8);
-		r2->childGFX = ropeGFX;
-		r2->setPos(256-56, 3);
-		r2->setLength(9);
-		r2->makeStatic();
-	}"""
+	"""Rope generator"""
 	rope = []
 	rope.append(Rope(56*2, 3*2, 9*2))
 	rope.append(Rope((256-56)*2, 3*2, 9*2))
@@ -312,8 +312,8 @@ def main():
 #Prepare Game Objects
 	clock = pygame.time.Clock()
 	platform = generateBricks()
-	#groundGroup = pygame.sprite.Group()
-	#groundGroup.add(platform)
+	groundGroup = pygame.sprite.Group()
+	groundGroup.add(platform)
 	player1 = Player(39,288)
 	player1.setKeys()
 	player2 = Player(457,288)
@@ -388,7 +388,8 @@ def main():
 						player2.MoveKeyUp(event.key)
 			allsprites.update()
 			if len(PixelPerfect.spritecollide_pp(player1,playerGroup, 0)) == 2:
-				print "Colides"
+				player1.collide(player2.dir,player2.xMove)
+				player2.collide(player1.dir,player1.xMove)
 			
 			#Draw Everything
 			screen.blit(background, (0, 0))
@@ -464,6 +465,7 @@ def main():
 			if not bound:
 				conn = binds()
 				bound = 1
+
 			player2 = depickelForRecving(conn.recv(512),player2)
 			conn.send(pickelForSending(player1))
 		if connect:
