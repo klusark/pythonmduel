@@ -52,19 +52,23 @@ class Player(pygame.sprite.Sprite):
 		self.stand, self.rect = loadImage('stand.png', 1,-1)
 		self.image = self.stand
 		self.rect.move_ip(x,y)
-		"""Set the number of Pixels to move each time"""
-		self.x_dist = 6
-		self.y_dist = 6 
+		#"""Set the number of Pixels to move each time"""
+		#self.x_dist = 6
+		#self.y_dist = 6 
 		"""Initialize how much we are moving"""
 		self.xMove = 0
 		self.yMove = 0
+
 		self.current = 0
-		self.running=0
+		self.running = 0
 		self.dir = 0
+		self.fallingforwards = 0
+		self.fallingback = 0
 		self.name = "Unset"
 		self.hitmask = pygame.surfarray.array_colorkey(self.image)
 		self.image.unlock()
 		self.image.unlock()
+
 
 	def setKeys(self, right = K_RIGHT, left = K_LEFT):
 		"""Sets the keys for the player object"""
@@ -75,27 +79,45 @@ class Player(pygame.sprite.Sprite):
 		"""Event fuction for when any keys bound to the current player object are hit"""
 		
 		if key == self.right:
-			self.xMove = self.x_dist
+			self.xMove = 6
 			self.dir = 0
 		elif key == self.left:
-			self.xMove = -self.x_dist
+			self.xMove = -6
 			self.dir = 1
 		self.running = 1
-
+		self.lastkey = key
 	def MoveKeyUp(self, key):
 		"""Event fuction for when any keys bound to the current player object are let go of"""
-		self.xMove = 0
-		self.running = 0
-		self.current = 0
+
+		if key == self.lastkey:
+			self.lastkey = 0
+			self.xMove = 0
+			self.running = 0
+			self.current = 0
 
 	def update(self):
-		if self.running:
+		if self.fallingforwards:
+			if self.current == len(self.fallforwards)-1:
+				self.current = 0
+				self.fallingforwards = 0
+				self.xMove = 0
+			else:
+				self.current += 1
+			self.image = self.fallforwards[self.current]
+		elif self.fallingback:
+			if self.current == len(self.fallback)-1:
+				self.current = 0
+				self.fallingback = 0
+				self.xMove = 0
+			else:
+				self.current += 1
+			self.image = self.fallback[self.current]
+		elif self.running:
 			if self.current == len(self.runframe)-1:
 				self.current = 0
 			else:
 				self.current += 1
 			self.image = self.runframe[self.current]
-
 		else:
 			self.image = self.stand
 		if self.dir==1:
@@ -103,11 +125,22 @@ class Player(pygame.sprite.Sprite):
 		#print self.rect.collidelistall()
 		#if self.xMove > 0:
 		#	self.xMove -= 1
+		
 		self.rect.move_ip(self.xMove,self.yMove)
 
-	def collide(self, otherdir, speed):
+	def collide(self, dir, speed):
 		"""Acts on collitions"""
-		print otherdir, speed
+		if self.xMove == 0 and speed == -6 or speed == 6:
+			self.fallingback = 1
+			self.running = 0
+			self.current = 0
+			self.xMove = 6
+			
+		else:
+			self.fallingforwards = 0
+			
+			
+		#print otherdir, speed
 	
 class Platform(pygame.sprite.Sprite):
 	"""Platform Sprite"""
@@ -193,7 +226,7 @@ def binds():
 	"""Makes the curret player wait for a connection from another player"""
 	HOST = ''				# Symbolic name meaning the local host
 	PORT = 50007			# Arbitrary non-privileged port
-	s = socket.socket()
+	s = socket()
 	s.bind((HOST,PORT))
 	s.listen(1)
 	conn, addr = s.accept()
@@ -203,7 +236,7 @@ def binds():
 def connects():
 	HOST = '127.0.0.1'	# The remote host
 	PORT = 50007			  # The same port as used by the server
-	s = socket.socket()
+	s = socket()
 	s.connect((HOST,PORT))
 	return s
 
@@ -314,11 +347,11 @@ def main():
 	platform = generateBricks()
 	groundGroup = pygame.sprite.Group()
 	groundGroup.add(platform)
-	player1 = Player(39,288)
-	player1.setKeys()
-	player2 = Player(457,288)
+	player1 = Player(39, 288)
+	player1.setKeys(K_d, K_a)
+	player2 = Player(457, 288)
 	player2.dir = 1
-	player2.setKeys(K_d,K_a)
+	player2.setKeys()
 	rope = generateRopes()
 	#print platform
 	mallow = []
