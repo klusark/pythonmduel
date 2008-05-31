@@ -59,11 +59,13 @@ class Player(pygame.sprite.Sprite):
 		"""Initialize how much we are moving"""
 		self.xMove = 0
 		self.yMove = 0
-
+		self.lastkey = 0
 		self.current = 0
 		self.crouching = 0
 		self.running = 0
 		self.dir = 0
+		self.crouchdown = 0
+		self.crouchup = 0
 		self.fallingforwards = 0
 		self.fallingback = 0
 		self.name = "Unset"
@@ -83,32 +85,43 @@ class Player(pygame.sprite.Sprite):
 		
 	def MoveKeyDown(self, key):
 		"""Event fuction for when any keys bound to the current player object are hit"""
-		if key == self.right:
-			self.xMove = 6
-			self.dir = 0
-			self.running = 1
-		elif key == self.left:
-			self.xMove = -6
-			self.dir = 1
-			self.running = 1
-		elif key == self.down:
-			self.crouching = 1
-			self.current = 0
-		
-		self.lastkey = key
+		if not self.crouching:
+			if key == self.right:
+				self.xMove = 6
+				self.dir = 0
+				self.running = 1
+			elif key == self.left:
+				self.xMove = -6
+				self.dir = 1
+				self.running = 1
+		if not self.running:
+			if key == self.down:
+				self.crouchdown = 1
+				self.crouching = 1
+				self.current = 0
+		elif self.running:
+			if key == self.down:
+				#self.rolling = 1
+				#self.current = 0
+				print "roll"
+		if not self.lastkey:
+			self.lastkey = key
 
 	def MoveKeyUp(self, key):
 		"""Event fuction for when any keys bound to the current player object are let go of"""
 		if key == self.lastkey:
+			if key == self.down:
+				self.crouchup = 1
+				self.crouchdown = 0
 			self.lastkey = 0
 			self.xMove = 0
 			self.running = 0
-			self.crouching = 0
+			#self.crouching = 0
 			self.current = 0
 
 	def update(self):
 		if self.fallingforwards:
-			if self.current == len(self.fallforwards)-1:
+			if self.current == len(self.fallforwards) -1:
 				self.current = 0
 				self.fallingforwards = 0
 				self.xMove = 0
@@ -116,7 +129,7 @@ class Player(pygame.sprite.Sprite):
 				self.current += 1
 			self.image = self.fallforwards[self.current]
 		elif self.fallingback:
-			if self.current == len(self.fallback)-1:
+			if self.current == len(self.fallback) -1:
 				self.current = 0
 				self.fallingback = 0
 				self.xMove = 0
@@ -125,18 +138,24 @@ class Player(pygame.sprite.Sprite):
 			self.image = self.fallback[self.current]
 		elif self.crouching:
 			self.image = self.crouch[self.current]
-			if self.current == len(self.crouch)-1:
-				self.current = len(self.crouch)-1
-			else:
+			if self.current == len(self.crouch) -1:
+				self.current = len(self.crouch) -1
+			elif self.crouchdown:
 				self.current += 1
+			if self.crouchup:
+				self.crouchup = 0
+				self.current -= 1
+				self.crouching = 0
 			
 		elif self.running:
 			self.image = self.runframe[self.current]
-			if self.current == len(self.runframe)-1:
+			if self.current == len(self.runframe) -1:
 				self.current = 0
 			else:
 				self.current += 1
 		else:
+			self.crouchup = 0
+			self.crouchdown = 0
 			self.image = self.stand
 		if self.dir==1:
 			self.image = pygame.transform.flip(self.image, 1, 0)
@@ -248,6 +267,9 @@ def depickelForRecving(info, player):
 		player.running = info["running"]
 	if "dir" in info:
 		player.dir = info["dir"]
+	"""for value in info:
+		player.value = info[value]
+		print player.value, player.xMove, value"""
 	return player
 
 def generateBricks():
@@ -363,6 +385,7 @@ def main():
 	connect = 0
 	bound = 0
 	connected = 0
+	selected=  0
 #players
 	playerfile = open("players","r")
 	players = []
@@ -373,6 +396,8 @@ def main():
 		playerinfo.append(findall("[-0-9]+",playerlist[i]))
 	player1.name = players[0]
 	player2.name = players[1]
+	
+	depickelForRecving(pickelForSending(player1),player1)
 #Main Game Loop
 	while 1:
 		clock.tick(10)
@@ -419,6 +444,21 @@ def main():
 						if event.key is K_SPACE:
 							page = 1
 							background.fill((0, 0, 0))
+					if page is 1:
+						if event.key == K_DOWN:
+							selected +=1
+						if event.key == K_UP:
+							selected -=1
+						if event.key == K_RETURN:
+							if selected == 0:
+								page=9
+								background.fill((0, 0, 0))
+							elif selected == 1:
+								page = 2
+								background.fill((0, 0, 0))
+							elif selected == 2:
+								page = 3
+								background.fill((0, 0, 0))
 					if page is 9:
 						if event.key == K_SPACE:
 							page = 10
@@ -426,16 +466,34 @@ def main():
 			if page is 0:
 				background.blit(introimage, (0, 0))
 			elif page is 1:
+				if selected == -1:
+					selected = 2
+				if selected == 3:
+					selected = 0
 				menucolour = (255,255,255)
-				
+				#menucolour = (176, 0, 0)
+				if selected == 0:
+					menucolour = (176, 0, 0)
+				else:
+					menucolour = (255,255,255)
 				begin = font.render("Begin Game", 0, menucolour)
 				beginpos = begin.get_rect(center=(background.get_width()/2,50))
 				background.blit(begin, beginpos)
+				
+				if selected == 1:
+					menucolour = (176, 0, 0)
+				else:
+					menucolour = (255,255,255)
 				
 				view = font.render("View Fighters", 0, menucolour)
 				viewpos = view.get_rect(center=(background.get_width()/2,70))
 				background.blit(view, viewpos)
 				
+				if selected == 2:
+					menucolour = (176, 0, 0)
+				else:
+					menucolour = (255,255,255)
+					
 				controls = font.render("Set Controls", 0, menucolour)
 				controlspos = controls.get_rect(center=(background.get_width()/2,90))
 				background.blit(controls, controlspos)
