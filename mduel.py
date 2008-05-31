@@ -56,9 +56,6 @@ class Player(pygame.sprite.Sprite):
 		self.stand, self.rect = loadImage('stand.png', 1,-1)
 		self.image = self.stand
 		self.rect.move_ip(x,y)
-		#"""Set the number of Pixels to move each time"""
-		#self.x_dist = 6
-		#self.y_dist = 6 
 		"""Initialize how much we are moving"""
 		self.xMove = 0
 		self.yMove = 0
@@ -84,8 +81,6 @@ class Player(pygame.sprite.Sprite):
 		self.down = down
 		self.keys.append(down)
 		
-		
-
 	def MoveKeyDown(self, key):
 		"""Event fuction for when any keys bound to the current player object are hit"""
 		if key == self.right:
@@ -498,33 +493,27 @@ def main():
 				text = font.render("FIDS", 0, (255, 255, 255))
 				background.blit(text, (500,140))
 			elif page is 3:
-				
-				colour = (176, 0, 0)
-				x=50
-				text = font.render("Player 1", 0, colour)
-				background.blit(text, (x,25))
-				
-				text = font.render("Right: "+pygame.key.name(player1.right), 0, colour)
-				background.blit(text, (x,50))
-				
-				text = font.render("Left: "+pygame.key.name(player1.left), 0, colour)
-				background.blit(text, (x,75))
-				
-				text = font.render("Crouch: "+pygame.key.name(player1.down), 0, colour)
-				background.blit(text, (x,100))
-				
-				colour = (0, 48, 192)
-				x=450
-				text = font.render("Player 2", 0, colour)
-				background.blit(text, (x,25))
-				text = font.render("Right: "+pygame.key.name(player2.right), 0, colour)
-				background.blit(text, (x,50))
-				
-				text = font.render("Left: "+pygame.key.name(player2.left), 0, colour)
-				background.blit(text, (x,75))
-				
-				text = font.render("Crouch: "+pygame.key.name(player2.down), 0, colour)
-				background.blit(text, (x,100))
+				posinfo={}
+				posinfo["p1"]=player1
+				posinfo["p2"]=player2
+				posinfo["x1"]=50
+				posinfo["x2"]=450
+				posinfo["colour1"]=(176, 0, 0)
+				posinfo["colour2"]=(0, 48, 192)
+				for i in range(1,3):
+					stri = str(i)
+
+					text = font.render("Player "+str(i), 0, posinfo["colour"+stri])
+					background.blit(text, (posinfo["x"+stri],25))
+					
+					text = font.render("Right: "+pygame.key.name(posinfo["p"+stri].right), 0, posinfo["colour"+stri])
+					background.blit(text, (posinfo["x"+stri],50))
+					
+					text = font.render("Left: "+pygame.key.name(posinfo["p"+stri].left), 0, posinfo["colour"+stri])
+					background.blit(text, (posinfo["x"+stri],75))
+					
+					text = font.render("Crouch: "+pygame.key.name(posinfo["p"+stri].down), 0, posinfo["colour"+stri])
+					background.blit(text, (posinfo["x"+stri],100))
 				
 			elif page is 9:
 				text = font.render(player1.name+" vs. "+player2.name, 0, (164, 64, 164))
