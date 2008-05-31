@@ -4,8 +4,8 @@ Mduel
 """
 
 #Import Modules
-import pygame, cPickle, PixelPerfect
-from socket import socket
+import pygame, cPickle, PixelPerfect, socket, errno
+#from socket import socket
 from os import path
 from re import findall
 from random import randint
@@ -217,7 +217,7 @@ def binds():
 	"""Makes the curret player wait for a connection from another player"""
 	HOST = '192.168.0.2'
 	PORT = 50008			# Arbitrary non-privileged port
-	s = socket()
+	s = socket.socket()
 	s.bind((HOST,PORT))
 	s.listen(1)
 	conn, addr = s.accept()
@@ -227,8 +227,12 @@ def binds():
 def connects():
 	HOST = '127.0.0.1'	# The remote host
 	PORT = 50008			  # The same port as used by the server
-	s = socket()
-	s.connect((HOST,PORT))
+	s = socket.socket()
+	try:
+		s.connect((HOST,PORT))
+	except socket.error, msg:
+		print msg[1]
+		return 0
 	return s
 
 def pickelForSending(player):
@@ -505,7 +509,11 @@ def main():
 		if connect:
 			if not connected:
 				s = connects()
-				connected=1
+				if s:
+					connected=1
+				else:
+					connect=0
+					continue
 
 			s.send(pickelForSending(player2))
 			player1 = depickelForRecving(s.recv(512),player1)
