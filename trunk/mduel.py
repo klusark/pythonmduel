@@ -49,6 +49,10 @@ class Player(pygame.sprite.Sprite):
 		for i in range(2):
 			image = loadImage("fallback"+str(i)+".png",0,-1)
 			self.fallback.append(image)
+		self.crouch=[]
+		for i in range(2):
+			image = loadImage("crouch"+str(i)+".png",0,-1)
+			self.crouch.append(image)
 		self.stand, self.rect = loadImage('stand.png', 1,-1)
 		self.image = self.stand
 		self.rect.move_ip(x,y)
@@ -60,6 +64,7 @@ class Player(pygame.sprite.Sprite):
 		self.yMove = 0
 
 		self.current = 0
+		self.crouching = 0
 		self.running = 0
 		self.dir = 0
 		self.fallingforwards = 0
@@ -69,30 +74,41 @@ class Player(pygame.sprite.Sprite):
 		self.image.unlock()
 		self.image.unlock()
 
-
-	def setKeys(self, right = K_RIGHT, left = K_LEFT):
+	def setKeys(self, right = K_RIGHT, left = K_LEFT, down = K_DOWN):
 		"""Sets the keys for the player object"""
+		self.keys=[]
 		self.right = right
+		self.keys.append(right)
 		self.left = left
+		self.keys.append(left)
+		self.down = down
+		self.keys.append(down)
+		
+		
 
 	def MoveKeyDown(self, key):
 		"""Event fuction for when any keys bound to the current player object are hit"""
-		
 		if key == self.right:
 			self.xMove = 6
 			self.dir = 0
+			self.running = 1
 		elif key == self.left:
 			self.xMove = -6
 			self.dir = 1
-		self.running = 1
+			self.running = 1
+		elif key == self.down:
+			self.crouching = 1
+			self.current = 0
+		
 		self.lastkey = key
+
 	def MoveKeyUp(self, key):
 		"""Event fuction for when any keys bound to the current player object are let go of"""
-
 		if key == self.lastkey:
 			self.lastkey = 0
 			self.xMove = 0
 			self.running = 0
+			self.crouching = 0
 			self.current = 0
 
 	def update(self):
@@ -112,17 +128,23 @@ class Player(pygame.sprite.Sprite):
 			else:
 				self.current += 1
 			self.image = self.fallback[self.current]
+		elif self.crouching:
+			self.image = self.crouch[self.current]
+			if self.current == len(self.crouch)-1:
+				self.current = len(self.crouch)-1
+			else:
+				self.current += 1
+			
 		elif self.running:
+			self.image = self.runframe[self.current]
 			if self.current == len(self.runframe)-1:
 				self.current = 0
 			else:
 				self.current += 1
-			self.image = self.runframe[self.current]
 		else:
 			self.image = self.stand
 		if self.dir==1:
 			self.image = pygame.transform.flip(self.image, 1, 0)
-		#print self.rect.collidelistall()
 		#if self.xMove > 0:
 		#	self.xMove -= 1
 		
@@ -138,7 +160,6 @@ class Player(pygame.sprite.Sprite):
 			
 		else:
 			self.fallingforwards = 0
-			
 			
 		#print otherdir, speed
 	
@@ -319,7 +340,7 @@ def main():
 	groundGroup = pygame.sprite.Group()
 	groundGroup.add(platform)
 	player1 = Player(39, 288)
-	player1.setKeys(K_d, K_a)
+	player1.setKeys(K_d, K_a, K_s)
 	player2 = Player(457, 288)
 	player2.dir = 1
 	player2.setKeys()
@@ -366,24 +387,20 @@ def main():
 				if event.type == QUIT:
 					return
 				elif event.type == KEYDOWN:
-					if (event.key == player1.right
-					or event.key == player1.left):
+					if event.key in player1.keys:
 						player1.MoveKeyDown(event.key)
-					if (event.key == player2.right
-					or event.key == player2.left):
+					if event.key in player2.keys:
 						player2.MoveKeyDown(event.key)
-					if event.key == K_DOWN:
-						player1.yMove = 5
+					#if event.key == K_DOWN:
+					#	player1.yMove = 5
 					if event.key == K_b:
 						bind = 1
 					if event.key == K_c:
 						connect = 1
 				elif event.type == KEYUP:
-					if (event.key == player1.right
-					or event.key == player1.left):
+					if event.key in player1.keys:
 						player1.MoveKeyUp(event.key)
-					if (event.key == player2.right
-					or event.key == player2.left):
+					if event.key in player2.keys:
 						player2.MoveKeyUp(event.key)
 			allsprites.update()
 			if len(PixelPerfect.spritecollide_pp(player1,playerGroup, 0)) == 2:
@@ -395,7 +412,7 @@ def main():
 			allsprites.draw(screen)
 			pygame.display.flip()
 		if menu:
-			"""Pages are 0: shows intro image 1: main menu 2: view fighters 3: set controls 9: displays who is playing 10: get game started"""
+			"""Pages are 0: shows intro image 1: main menu 2: view fighters 3: set controls 9: displays who is playing when game is starting 10: get game started"""
 			for event in pygame.event.get():
 				if event.type == QUIT:
 					return
@@ -481,6 +498,7 @@ def main():
 				text = font.render("FIDS", 0, (255, 255, 255))
 				background.blit(text, (500,140))
 			elif page is 3:
+				
 				colour = (176, 0, 0)
 				x=50
 				text = font.render("Player 1", 0, colour)
@@ -492,6 +510,9 @@ def main():
 				text = font.render("Left: "+pygame.key.name(player1.left), 0, colour)
 				background.blit(text, (x,75))
 				
+				text = font.render("Crouch: "+pygame.key.name(player1.down), 0, colour)
+				background.blit(text, (x,100))
+				
 				colour = (0, 48, 192)
 				x=450
 				text = font.render("Player 2", 0, colour)
@@ -501,6 +522,9 @@ def main():
 				
 				text = font.render("Left: "+pygame.key.name(player2.left), 0, colour)
 				background.blit(text, (x,75))
+				
+				text = font.render("Crouch: "+pygame.key.name(player2.down), 0, colour)
+				background.blit(text, (x,100))
 				
 			elif page is 9:
 				text = font.render(player1.name+" vs. "+player2.name, 0, (164, 64, 164))
