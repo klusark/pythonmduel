@@ -178,29 +178,6 @@ class MallowAnm(pygame.sprite.Sprite):
 			self.current += 1
 		self.image = self.anmframe[self.current]
 
-class Selector(pygame.sprite.Sprite):
-	"""The selector on menup2"""
-	def __init__(self):
-		pygame.sprite.Sprite.__init__(self)
-		self.image, self.rect = loadImage('selector.png', 1, -1)
-		self.y=94
-		self.rect.move_ip(212, self.y)
-		
-	def move(self, key):
-		"""Moves the selector and loops when at bottom or top"""
-		if key == K_DOWN:
-			self.rect.move_ip(0,30)
-			self.y+=30
-		elif key == K_UP:
-			self.rect.move_ip(0,-30)
-			self.y-=30
-		if self.y == 64:
-			self.rect.move_ip(0,210)
-			self.y =274
-		elif self.y == 304:
-			self.rect.move_ip(0,-210)
-			self.y=94
-
 class Rope(pygame.sprite.Sprite):
 	"""The rope"""
 	def __init__(self,x,y,len):
@@ -209,13 +186,9 @@ class Rope(pygame.sprite.Sprite):
 		self.rect.move_ip(x, y)
 		self.image = pygame.transform.scale(self.image,(1,16*len))
 
-def getMenuItem(y):
-	"""Simple fuction to tell the item number on the main menu"""
-	return (y-94)/30
-
 def binds():
 	"""Makes the curret player wait for a connection from another player"""
-	HOST = '192.168.0.2'
+	HOST = ''
 	PORT = 50008			# Arbitrary non-privileged port
 	s = socket.socket()
 	s.bind((HOST,PORT))
@@ -340,9 +313,6 @@ def main():
 #Font
 	pygame.font.init()
 	font = pygame.font.Font("data/marshmallowDuel.ttf", 28)
-	#text = font.render("Mduel", 0, (164, 64, 164))
-	#textpos = text.get_rect(centerx=background.get_width()/2)
-	#background.blit(text, textpos)
 #Prepare Game Objects
 	clock = pygame.time.Clock()
 	platform = generateBricks()
@@ -354,7 +324,6 @@ def main():
 	player2.dir = 1
 	player2.setKeys()
 	rope = generateRopes()
-	#print platform
 	mallow = []
 	for i in range(22):
 		mallow.append(Mallow(i*(15*2),400-(15*2)))
@@ -366,13 +335,10 @@ def main():
 			frame = 0
 		mallows.append(MallowAnm(i*(16*2),400-16-30,frame))
 		frame +=1
-	#platform = Platform(0,100)
 	allsprites = pygame.sprite.RenderPlain((player1, player2, platform, mallows, mallow, rope))
 	playerGroup = pygame.sprite.Group()
 	playerGroup.add(player1,player2)
 
-	selector = Selector()
-	selectorRender = pygame.sprite.RenderUpdates(selector)
 #Odds and ends
 	menu = 1
 	playing = 0
@@ -429,42 +395,53 @@ def main():
 			allsprites.draw(screen)
 			pygame.display.flip()
 		if menu:
+			"""Pages are 0: shows intro image 1: main menu 2: view fighters 3: set controls 9: displays who is playing 10: get game started"""
 			for event in pygame.event.get():
 				if event.type == QUIT:
 					return
 				elif event.type == KEYDOWN and event.key == K_ESCAPE:
-					return
+					page = 1
+					background.fill((0, 0, 0))
 				elif event.type == KEYDOWN:
 					if page is 0:
 						if event.key is K_SPACE:
-							page+=1
+							page = 1
 							background.fill((0, 0, 0))
-					if page is 1:
-						if (event.key == K_DOWN
-						or event.key == K_UP):
-							selector.move(event.key)
-						elif event.key == K_RETURN:
-							if getMenuItem(selector.y) == 0:
-								page=9
-								background.fill((0, 0, 0))
-							elif getMenuItem(selector.y) == 2:
-								page = 2
-								background.fill((0, 0, 0))
-							elif getMenuItem(selector.y) == 6:
-								return
-					elif page is 9:
+					if page is 9:
 						if event.key == K_SPACE:
 							page = 10
 						
 			if page is 0:
 				background.blit(introimage, (0, 0))
 			elif page is 1:
-				pos = menup2.get_rect(centerx=background.get_width()/2,centery=background.get_height()/2)
-				background.blit(menup2, pos)
-				selectorRender.draw(background)
-				#text = font.render("Begin Match", 0, (164, 64, 164))
-				#textpos = text.get_rect(centerx=background.get_width()/2)
-				#background.blit(text, textpos)
+				menucolour = (255,255,255)
+				
+				begin = font.render("Begin Game", 0, menucolour)
+				beginpos = begin.get_rect(center=(background.get_width()/2,50))
+				background.blit(begin, beginpos)
+				
+				view = font.render("View Fighters", 0, menucolour)
+				viewpos = view.get_rect(center=(background.get_width()/2,70))
+				background.blit(view, viewpos)
+				
+				controls = font.render("Set Controls", 0, menucolour)
+				controlspos = controls.get_rect(center=(background.get_width()/2,90))
+				background.blit(controls, controlspos)
+				
+				
+				#mouse code
+				if beginpos.collidepoint(pygame.mouse.get_pos()) == 1 and pygame.mouse.get_pressed()[0]:
+					page=9
+					background.fill((0, 0, 0))
+
+				if viewpos.collidepoint(pygame.mouse.get_pos()) == 1 and pygame.mouse.get_pressed()[0]:
+					page = 2
+					background.fill((0, 0, 0))
+				
+				if controlspos.collidepoint(pygame.mouse.get_pos()) == 1 and pygame.mouse.get_pressed()[0]:
+					page = 3
+					background.fill((0, 0, 0))
+
 			elif page is 2:
 				for i in range(len(players)):
 					if players[i] == player1.name:
@@ -475,20 +452,56 @@ def main():
 						colour = (164, 64, 164)
 					text = font.render(players[i], 0, colour)
 					background.blit(text, (0,160+40*i))
+					
 					text = font.render(playerinfo[i][0], 0, colour)
 					background.blit(text, (150,160+40*i))
+					
+					text = font.render(playerinfo[i][1], 0, colour)
+					background.blit(text, (250,160+40*i))
+					
+					text = font.render(playerinfo[i][2], 0, colour)
+					background.blit(text, (300,160+40*i))
+					
+					text = font.render(playerinfo[i][3], 0, colour)
+					background.blit(text, (400,160+40*i))
+					
+					text = font.render(playerinfo[i][4], 0, colour)
+					background.blit(text, (500,160+40*i))
+					
 				text = font.render("Name", 0, (255, 255, 255))
 				background.blit(text, (0,140))
 				text = font.render("Rank", 0, (255, 255, 255))
 				background.blit(text, (150,140))
 				text = font.render("W", 0, (255, 255, 255))
-				background.blit(text, (200,140))
-				text = font.render("L", 0, (255, 255, 255))
 				background.blit(text, (250,140))
-				text = font.render("S", 0, (255, 255, 255))
+				text = font.render("L", 0, (255, 255, 255))
 				background.blit(text, (300,140))
+				text = font.render("S", 0, (255, 255, 255))
+				background.blit(text, (400,140))
 				text = font.render("FIDS", 0, (255, 255, 255))
-				background.blit(text, (350,140))
+				background.blit(text, (500,140))
+			elif page is 3:
+				colour = (176, 0, 0)
+				x=50
+				text = font.render("Player 1", 0, colour)
+				background.blit(text, (x,25))
+				
+				text = font.render("Right: "+pygame.key.name(player1.right), 0, colour)
+				background.blit(text, (x,50))
+				
+				text = font.render("Left: "+pygame.key.name(player1.left), 0, colour)
+				background.blit(text, (x,75))
+				
+				colour = (0, 48, 192)
+				x=450
+				text = font.render("Player 2", 0, colour)
+				background.blit(text, (x,25))
+				text = font.render("Right: "+pygame.key.name(player2.right), 0, colour)
+				background.blit(text, (x,50))
+				
+				text = font.render("Left: "+pygame.key.name(player2.left), 0, colour)
+				background.blit(text, (x,75))
+				
 			elif page is 9:
 				text = font.render(player1.name+" vs. "+player2.name, 0, (164, 64, 164))
 				pos = text.get_rect(centerx=background.get_width()/2,centery=background.get_height()/2)
@@ -497,6 +510,7 @@ def main():
 				playing = 1
 				menu = 0
 				background.fill((0, 0, 0))
+
 			screen.blit(background, (0, 0))
 			pygame.display.flip()
 		if bind:
