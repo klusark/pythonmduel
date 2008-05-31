@@ -37,26 +37,10 @@ class Player(pygame.sprite.Sprite):
 	def __init__(self, x = 0, y = 0):
 		"""Initializes Player class"""
 		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
-		self.runframe=[]
-		for i in range(4):
-			image = loadImage("run"+str(i)+".png",0,-1)
-			self.runframe.append(image)
-		self.fallforwards=[]
-		for i in range(2):
-			image = loadImage("fallforwards"+str(i)+".png",0,-1)
-			self.fallforwards.append(image)
-		self.fallback=[]
-		for i in range(2):
-			image = loadImage("fallback"+str(i)+".png",0,-1)
-			self.fallback.append(image)
-		self.crouch=[]
-		for i in range(2):
-			image = loadImage("crouch"+str(i)+".png",0,-1)
-			self.crouch.append(image)
-		self.stand, self.rect = loadImage('stand.png', 1,-1)
+		self.frames = {}
+		self.loadImages()
 		self.image = self.stand
 		self.rect.move_ip(x,y)
-		"""Initialize how much we are moving"""
 		self.xMove = 0
 		self.yMove = 0
 		self.lastkey = 0
@@ -68,11 +52,26 @@ class Player(pygame.sprite.Sprite):
 		self.crouchup = 0
 		self.fallingforwards = 0
 		self.fallingback = 0
+		self.rolling = 1
 		self.name = "Unset"
 		self.hitmask = pygame.surfarray.array_colorkey(self.image)
 		self.image.unlock()
 		self.image.unlock()
-
+		
+	def loadAnm(self,name,num):
+		self.frames[name]=[]
+		for i in range(num):
+			image = loadImage(name+str(i)+".png",0,-1)
+			self.frames[name].append(image)
+			
+	def loadImages(self):
+		self.loadAnm("run", 4)
+		self.loadAnm("fallforwards", 2)
+		self.loadAnm("fallback", 2)
+		self.loadAnm("crouch", 2)
+		self.loadAnm("roll", 4)
+		self.stand, self.rect = loadImage('stand.png', 1,-1)
+		
 	def setKeys(self, right = K_RIGHT, left = K_LEFT, down = K_DOWN):
 		"""Sets the keys for the player object"""
 		self.keys=[]
@@ -101,9 +100,9 @@ class Player(pygame.sprite.Sprite):
 				self.current = 0
 		elif self.running:
 			if key == self.down:
-				#self.rolling = 1
-				#self.current = 0
-				print "roll"
+				self.rolling = 1
+				self.current = 0
+				#print "roll"
 		if not self.lastkey:
 			self.lastkey = key
 
@@ -121,25 +120,25 @@ class Player(pygame.sprite.Sprite):
 
 	def update(self):
 		if self.fallingforwards:
-			if self.current == len(self.fallforwards) -1:
+			if self.current == len(self.frames["fallforwards"]) -1:
 				self.current = 0
 				self.fallingforwards = 0
 				self.xMove = 0
 			else:
 				self.current += 1
-			self.image = self.fallforwards[self.current]
+			self.image = self.frames["fallforwards"][self.current]
 		elif self.fallingback:
-			if self.current == len(self.fallback) -1:
+			if self.current == len(self.frames["fallback"]) -1:
 				self.current = 0
 				self.fallingback = 0
 				self.xMove = 0
 			else:
 				self.current += 1
-			self.image = self.fallback[self.current]
+			self.image = self.frames["fallback"][self.current]
 		elif self.crouching:
-			self.image = self.crouch[self.current]
-			if self.current == len(self.crouch) -1:
-				self.current = len(self.crouch) -1
+			self.image = self.frames["crouch"][self.current]
+			if self.current == len(self.frames["crouch"]) -1:
+				self.current = len(self.frames["crouch"]) -1
 			elif self.crouchdown:
 				self.current += 1
 			if self.crouchup:
@@ -148,8 +147,8 @@ class Player(pygame.sprite.Sprite):
 				self.crouching = 0
 			
 		elif self.running:
-			self.image = self.runframe[self.current]
-			if self.current == len(self.runframe) -1:
+			self.image = self.frames["run"][self.current]
+			if self.current == len(self.frames["run"]) -1:
 				self.current = 0
 			else:
 				self.current += 1
@@ -554,7 +553,7 @@ class Main():
 						self.connect=0
 						continue
 
-				self.s.send(self.pickelForSending(self.player2))
+				self.s.send(self.picforSending(self.player2))
 				self.player1 = self.depickelForRecving(self.s.recv(512), self.player1)
 	def connects(self):
 		"""Connects to the server"""
