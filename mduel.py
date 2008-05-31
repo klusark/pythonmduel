@@ -209,15 +209,6 @@ class Rope(pygame.sprite.Sprite):
 		self.rect.move_ip(x, y)
 		self.image = pygame.transform.scale(self.image,(1,16*len))
 
-class SendPlayer():
-	"""Class for information being sent"""
-	def __init__(self):
-		self.xMove = 0
-		self.yMove = 0
-		self.current = 0
-		self.running = 0
-		self.dir = 0
-
 def getMenuItem(y):
 	"""Simple fuction to tell the item number on the main menu"""
 	return (y-94)/30
@@ -225,7 +216,7 @@ def getMenuItem(y):
 def binds():
 	"""Makes the curret player wait for a connection from another player"""
 	HOST = ''				# Symbolic name meaning the local host
-	PORT = 50007			# Arbitrary non-privileged port
+	PORT = 50008			# Arbitrary non-privileged port
 	s = socket()
 	s.bind((HOST,PORT))
 	s.listen(1)
@@ -235,29 +226,35 @@ def binds():
 
 def connects():
 	HOST = '127.0.0.1'	# The remote host
-	PORT = 50007			  # The same port as used by the server
+	PORT = 50008			  # The same port as used by the server
 	s = socket()
 	s.connect((HOST,PORT))
 	return s
 
 def pickelForSending(player):
-	pickle = SendPlayer()
-	pickle.xMove =  player.xMove
-	pickle.yMove =  player.yMove
-	pickle.current =  player.current
-	pickle.running =  player.running
-	pickle.dir =  player.dir
-	dump = cPickle.dumps(pickle)
+	#global lastsent
+	info = {}
+	info["xMove"] =  player.xMove
+	info["yMove"] =  player.yMove
+	info["current"] =  player.current
+	info["running"] =  player.running
+	info["dir"] =  player.dir
+	dump = cPickle.dumps(info)
 	return compress(dump)
 	
-def depickelForRecving(pickle, player):
-	pickle = decompress(pickle)
-	pickle = cPickle.loads(pickle)
-	player.xMove = pickle.xMove
-	player.yMove = pickle.yMove
-	player.current = pickle.current
-	player.running = pickle.running
-	player.dir = pickle.dir
+def depickelForRecving(info, player):
+	info = decompress(info)
+	info = cPickle.loads(info)
+	if "xMove" in info:
+		player.xMove = info["xMove"]
+	if "yMove" in info:
+		player.yMove = info["yMove"]
+	if "current" in info:
+		player.current = info["current"]
+	if "running" in info:
+		player.running = info["running"]
+	if "dir" in info:
+		player.dir = info["dir"]
 	return player
 
 def generateBricks():
