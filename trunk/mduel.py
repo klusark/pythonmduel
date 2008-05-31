@@ -215,7 +215,7 @@ def getMenuItem(y):
 
 def binds():
 	"""Makes the curret player wait for a connection from another player"""
-	HOST = ''				# Symbolic name meaning the local host
+	HOST = '192.168.0.2'
 	PORT = 50008			# Arbitrary non-privileged port
 	s = socket()
 	s.bind((HOST,PORT))
@@ -385,7 +385,6 @@ def main():
 	for i in range(6):
 		players.append("".join(findall("[a-zA-Z]+",playerlist[i])))
 		playerinfo.append(findall("[-0-9]+",playerlist[i]))
-
 	player1.name = players[0]
 	player2.name = players[1]
 #Main Game Loop
@@ -464,11 +463,16 @@ def main():
 				#background.blit(text, textpos)
 			elif page is 2:
 				for i in range(len(players)):
-					text = font.render(players[i], 0, (164, 64, 164))
+					if players[i] == player1.name:
+						colour = (176, 0, 0)
+					elif players[i] == player2.name:
+						colour = (0, 48, 192)
+					else:
+						colour = (164, 64, 164)
+					text = font.render(players[i], 0, colour)
 					background.blit(text, (0,160+40*i))
-				for i in range(len(players)):
-					text = font.render(playerinfo[0][i], 0, (164, 64, 164))
-					background.blit(text, (0,160+40*i))
+					text = font.render(playerinfo[i][0], 0, colour)
+					background.blit(text, (150,160+40*i))
 				text = font.render("Name", 0, (255, 255, 255))
 				background.blit(text, (0,140))
 				text = font.render("Rank", 0, (255, 255, 255))
