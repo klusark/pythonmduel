@@ -289,7 +289,7 @@ class Main():
 		self.connect = 0
 		self.bound = 0
 		self.connected = 0
-		self.selected =  0
+		self.selected =  -2
 		self.getnewkey = 0
 	#players
 		self.playerfile = open("players","r")
@@ -382,9 +382,14 @@ class Main():
 								self.background.fill((0, 0, 0))
 						if self.page is 1:
 							if event.key == K_DOWN:
+								if self.selected == -2:
+									self.selected = 2
 								self.selected +=1
 							if event.key == K_UP:
+								if self.selected == -2:
+									self.selected = 0
 								self.selected -=1
+
 							if event.key == K_RETURN:
 								if self.selected == 0:
 									self.page=9
