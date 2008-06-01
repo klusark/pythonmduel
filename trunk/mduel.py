@@ -52,7 +52,7 @@ class Player(pygame.sprite.Sprite):
 		self.crouchup = 0
 		self.fallingforwards = 0
 		self.fallingback = 0
-		self.rolling = 1
+		self.rolling = 0
 		self.name = "Unset"
 		self.hitmask = pygame.surfarray.array_colorkey(self.image)
 		self.image.unlock()
@@ -102,12 +102,16 @@ class Player(pygame.sprite.Sprite):
 			if key == self.down:
 				self.rolling = 1
 				self.current = 0
-				#print "roll"
+				if key == self.right:
+					self.xMove = 8
+				elif key == self.left:
+					self.xMove = -8
 		if not self.lastkey:
 			self.lastkey = key
 
 	def MoveKeyUp(self, key):
 		"""Event fuction for when any keys bound to the current player object are let go of"""
+		#print self.lastkey, key
 		if key == self.lastkey:
 			if key == self.down:
 				self.crouchup = 1
@@ -145,7 +149,17 @@ class Player(pygame.sprite.Sprite):
 				self.crouchup = 0
 				self.current -= 1
 				self.crouching = 0
-			
+		elif self.rolling:
+			self.image = self.frames["roll"][self.current]
+			if self.current == len(self.frames["roll"]) -1:
+				self.rolling = 0
+				self.crouching = 1
+				self.current = 0
+				self.crouchdown = 1
+				self.xMove = 0
+				self.lastkey=self.down
+			else:
+				self.current += 1
 		elif self.running:
 			self.image = self.frames["run"][self.current]
 			if self.current == len(self.frames["run"]) -1:
