@@ -305,7 +305,7 @@ class Main():
 	#settings
 		self.settings = ConfigParser.RawConfigParser()
 		self.settings.readfp(open('settings'))
-	
+		self.stuffs = {}
 	def generateBricks(self):
 		"""platform generator"""
 		platform = []
@@ -402,7 +402,7 @@ class Main():
 									self.background.fill((0, 0, 0))
 						if self.page is 3:
 							if self.getnewkey:
-								self.posinfo["p"+stri].keys[self.getnewkey[0]] = event.key
+								self.posinfo["p"+self.getnewkey[1]].keys[self.getnewkey[0]] = event.key
 								self.getnewkey = 0
 								self.background.fill((0, 0, 0))
 						if self.page is 9:
@@ -510,21 +510,10 @@ class Main():
 						self.text = self.font.render("Player "+str(i), 0, self.posinfo["colour"+stri])
 						self.background.blit(self.text, (self.posinfo["x"+stri],25))
 						
-						self.text = self.font.render("Right: "+pygame.key.name(self.posinfo["p"+stri].keys["right"]), 0, self.posinfo["colour"+stri])
-						self.textpos = self.text.get_rect(x=self.posinfo["x"+stri],y=50)
-						self.background.blit(self.text, self.textpos)
-						if self.textpos.collidepoint(pygame.mouse.get_pos()) == 1 and pygame.mouse.get_pressed()[0]:
-							self.text = self.font.render("Press new Right key: ", 0, (255,255,255))
-							self.pos = self.text.get_rect(centerx=self.background.get_width()/2,y=350)
-							self.background.blit(self.text, self.pos)
-							self.getnewkey = ("right", stri)
-						
-						self.text = self.font.render("Left: "+pygame.key.name(self.posinfo["p"+stri].keys["left"]), 0, self.posinfo["colour"+stri])
-						self.background.blit(self.text, (self.posinfo["x"+stri],75))
-						
-						self.text = self.font.render("Crouch: "+pygame.key.name(self.posinfo["p"+stri].keys["down"]), 0, self.posinfo["colour"+stri])
-						self.background.blit(self.text, (self.posinfo["x"+stri],100))
-					
+						self.setNewKey("Right", "right", stri, 50)
+						self.setNewKey("Left", "left", stri, 75)
+						self.setNewKey("Crouch", "down", stri, 100)
+
 				elif self.page is 9:
 					self.text = self.font.render(self.player1.name+" vs. "+self.player2.name, 0, (164, 64, 164))
 					self.pos = self.text.get_rect(center=(self.background.get_width()/2,self.background.get_height()/2))
@@ -555,7 +544,17 @@ class Main():
 
 				self.s.send(self.picelForSending(self.player2))
 				self.player1 = self.depickelForRecving(self.s.recv(512), self.player1)
-
+		
+	def setNewKey(self, name, key, i, y):
+		self.text = self.font.render(name+": "+pygame.key.name(self.posinfo["p"+i].keys[key]), 0, self.posinfo["colour"+i])
+		self.stuffs["textpos"+i] = self.text.get_rect(x=self.posinfo["x"+i],y=y)
+		self.background.blit(self.text, self.stuffs["textpos"+i])
+		if self.stuffs["textpos"+i].collidepoint(pygame.mouse.get_pos()) == 1 and pygame.mouse.get_pressed()[0]:
+			self.text = self.font.render("Press new "+name+" key: ", 0, (255,255,255))
+			self.pos = self.text.get_rect(centerx=self.background.get_width()/2,y=350)
+			self.background.blit(self.text, self.pos)
+			self.getnewkey = (key, i)
+			
 	def connects(self):
 		"""Connects to the server"""
 		self.HOST = '127.0.0.1'	# The remote host
