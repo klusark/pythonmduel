@@ -76,46 +76,42 @@ class Player(pygame.sprite.Sprite):
 	def setKeys(self, right = K_RIGHT, left = K_LEFT, down = K_DOWN):
 		"""setKeys(right key, left key, crouch key)
 		Sets the keys for the player object"""
-		self.keys=[]
-		self.right = right
-		self.keys.append(right)
-		self.left = left
-		self.keys.append(left)
-		self.down = down
-		self.keys.append(down)
+		self.keys = {}
+		self.keys["right"] = right
+		self.keys["left"] = left
+		self.keys["down"] = down
 		
 	def MoveKeyDown(self, key):
 		"""Event fuction for when any keys bound to the current player object are hit"""
 		if not self.crouching:
-			if key == self.right:
+			if key == self.keys["right"]:
 				self.xMove = 6
 				self.dir = 0
 				self.running = 1
-			elif key == self.left:
+			elif key == self.keys["left"]:
 				self.xMove = -6
 				self.dir = 1
 				self.running = 1
 		if not self.running:
-			if key == self.down:
+			if key == self.keys["down"]:
 				self.crouchdown = 1
 				self.crouching = 1
 				self.current = 0
 		elif self.running:
-			if key == self.down:
+			if key == self.keys["down"]:
 				self.rolling = 1
 				self.current = 0
-				if key == self.right:
+				if key == self.keys["right"]:
 					self.xMove = 8
-				elif key == self.left:
+				elif key == self.keys["left"]:
 					self.xMove = -8
 		if not self.lastkey:
 			self.lastkey = key
 
 	def MoveKeyUp(self, key):
 		"""Event fuction for when any keys bound to the current player object are let go of"""
-		#print self.lastkey, key
 		if key == self.lastkey:
-			if key == self.down:
+			if key == self.keys["down"]:
 				self.crouchup = 1
 				self.crouchdown = 0
 			self.lastkey = 0
@@ -285,7 +281,6 @@ class Main():
 		self.allsprites = pygame.sprite.RenderPlain((self.player1, self.player2, self.platform, self.mallows, self.mallow, self.rope))
 		self.playerGroup = pygame.sprite.Group()
 		self.playerGroup.add(self.player1, self.player2)
-
 	#Odds and ends
 		self.menu = 1
 		self.playing = 0
@@ -294,7 +289,8 @@ class Main():
 		self.connect = 0
 		self.bound = 0
 		self.connected = 0
-		self.selected=  0
+		self.selected =  0
+		self.getnewkey = 0
 	#players
 		self.playerfile = open("players","r")
 		self.players = []
@@ -347,9 +343,9 @@ class Main():
 					if event.type == QUIT:
 						return
 					elif event.type == KEYDOWN:
-						if event.key in self.player1.keys:
+						if event.key in self.player1.keys.values():
 							self.player1.MoveKeyDown(event.key)
-						if event.key in self.player2.keys:
+						if event.key in self.player2.keys.values():
 							self.player2.MoveKeyDown(event.key)
 						#if event.key == K_DOWN:
 						#	player1.yMove = 5
@@ -358,9 +354,9 @@ class Main():
 						if event.key == K_c:
 							self.connect = 1
 					elif event.type == KEYUP:
-						if event.key in self.player1.keys:
+						if event.key in self.player1.keys.values():
 							self.player1.MoveKeyUp(event.key)
-						if event.key in self.player2.keys:
+						if event.key in self.player2.keys.values():
 							self.player2.MoveKeyUp(event.key)
 				self.allsprites.update()
 				if len(PixelPerfect.spritecollide_pp(self.player1, self.playerGroup, 0)) == 2:
@@ -399,6 +395,11 @@ class Main():
 								elif self.selected == 2:
 									self.page = 3
 									self.background.fill((0, 0, 0))
+						if self.page is 3:
+							if self.getnewkey:
+								self.posinfo["p"+stri].keys[self.getnewkey[0]] = event.key
+								self.getnewkey = 0
+								self.background.fill((0, 0, 0))
 						if self.page is 9:
 							if event.key == K_SPACE:
 								self.page = 10
@@ -504,13 +505,19 @@ class Main():
 						self.text = self.font.render("Player "+str(i), 0, self.posinfo["colour"+stri])
 						self.background.blit(self.text, (self.posinfo["x"+stri],25))
 						
-						self.text = self.font.render("Right: "+pygame.key.name(self.posinfo["p"+stri].right), 0, self.posinfo["colour"+stri])
-						self.background.blit(self.text, (self.posinfo["x"+stri],50))
+						self.text = self.font.render("Right: "+pygame.key.name(self.posinfo["p"+stri].keys["right"]), 0, self.posinfo["colour"+stri])
+						self.textpos = self.text.get_rect(x=self.posinfo["x"+stri],y=50)
+						self.background.blit(self.text, self.textpos)
+						if self.textpos.collidepoint(pygame.mouse.get_pos()) == 1 and pygame.mouse.get_pressed()[0]:
+							self.text = self.font.render("Press new Right key: ", 0, (255,255,255))
+							self.pos = self.text.get_rect(centerx=self.background.get_width()/2,y=350)
+							self.background.blit(self.text, self.pos)
+							self.getnewkey = ("right", stri)
 						
-						self.text = self.font.render("Left: "+pygame.key.name(self.posinfo["p"+stri].left), 0, self.posinfo["colour"+stri])
+						self.text = self.font.render("Left: "+pygame.key.name(self.posinfo["p"+stri].keys["left"]), 0, self.posinfo["colour"+stri])
 						self.background.blit(self.text, (self.posinfo["x"+stri],75))
 						
-						self.text = self.font.render("Crouch: "+pygame.key.name(self.posinfo["p"+stri].down), 0, self.posinfo["colour"+stri])
+						self.text = self.font.render("Crouch: "+pygame.key.name(self.posinfo["p"+stri].keys["down"]), 0, self.posinfo["colour"+stri])
 						self.background.blit(self.text, (self.posinfo["x"+stri],100))
 					
 				elif self.page is 9:
