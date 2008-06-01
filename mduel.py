@@ -4,7 +4,7 @@ Mduel
 """
 
 #Import Modules
-import pygame, cPickle, PixelPerfect, socket, errno, ConfigParser
+import pygame, cPickle, PixelPerfect, socket, ConfigParser
 #from socket import socket
 from os import path
 from re import findall
@@ -65,6 +65,7 @@ class Player(pygame.sprite.Sprite):
 			self.frames[name].append(image)
 			
 	def loadImages(self):
+		"""loads images"""
 		self.loadAnm("run", 4)
 		self.loadAnm("fallforwards", 2)
 		self.loadAnm("fallback", 2)
@@ -73,7 +74,8 @@ class Player(pygame.sprite.Sprite):
 		self.stand, self.rect = loadImage('stand.png', 1,-1)
 		
 	def setKeys(self, right = K_RIGHT, left = K_LEFT, down = K_DOWN):
-		"""Sets the keys for the player object"""
+		"""setKeys(right key, left key, crouch key)
+		Sets the keys for the player object"""
 		self.keys=[]
 		self.right = right
 		self.keys.append(right)
@@ -309,36 +311,7 @@ class Main():
 		self.settings.readfp(open('settings'))
 	
 	def generateBricks(self):
-		"""Taken from MDuel DS and modifyed
-		void gameManager::generateBricks()
-		{
-			u16 tileGFX = loadGFX(tileSprite.spriteData, OBJ_SIZE_16X16, 1);
-			for (int i=0; i < 51; ++i)
-			{
-				floorTile *temp = new floorTile(this);
-				temp->setPallete(tileSprite.palleteID);
-				temp->giveGFX(tileGFX, OBJ_SIZE_16X16, 8, 8, 0, OFFX, OFFY);
-				
-				if (i<3)
-					temp->setPos(i*16+24, 192-32+8);
-				else if (i<6)
-					temp->setPos(256-24-((i-3)*16), 192-32+8);
-				else if (i>47)
-					temp->setPos(256-16-8-((i-47)*16), 192-32+8+4*-32);
-				else if (i>44)
-					temp->setPos((i-45)*16+16+16+8, 192-32+8+4*-32);
-				else {
-					u8 j = i-6;
-					u8 col = j%13;
-					u8 row = j/13;
-					if (PA_RandMax(10) < 7 || (
-						(gameSprites.size()-2 > 0 && gameSprites[gameSprites.size()-2]->getx() > 0) && 
-						(gameSprites.size()-3 > 0 && gameSprites[gameSprites.size()-3]->getx() < 0) ))
-						temp->setPos((col+1)*16+16, 192-32+8+((row+1)*-32));
-				}
-				temp->makeStatic();
-			}
-		}"""
+		"""platform generator"""
 		platform = []
 		for i in range(51):
 			if (i<3):
@@ -365,6 +338,7 @@ class Main():
 		return rope
 		
 	def mainloop(self):
+		"""The games main loop"""
 		while 1:
 			self.clock.tick(10)
 			if self.playing:
@@ -567,8 +541,9 @@ class Main():
 						self.connect=0
 						continue
 
-				self.s.send(self.picforSending(self.player2))
+				self.s.send(self.picelForSending(self.player2))
 				self.player1 = self.depickelForRecving(self.s.recv(512), self.player1)
+
 	def connects(self):
 		"""Connects to the server"""
 		self.HOST = '127.0.0.1'	# The remote host
@@ -592,6 +567,7 @@ class Main():
 		#return conn
 
 	def pickelForSending(self, player):
+		"""Gets the infermation in the player objet ready for sending"""
 		info = {}
 		info["xMove"] =  player.xMove
 		info["yMove"] =  player.yMove
@@ -602,6 +578,7 @@ class Main():
 		return compress(dump)
 		
 	def depickelForRecving(self, info, player):
+		"""inserts infermation from other client"""
 		info = decompress(info)
 		info = cPickle.loads(info)
 		if "xMove" in info:
@@ -621,7 +598,10 @@ class Main():
 	
 if __name__ == '__main__':
 	main = Main()
-	main.mainloop()
+	try:
+		main.mainloop()
+	except KeyboardInterrupt:
+		print "Keyboard Interrupt"
 #new lines so i can scroll down farther
 
 
