@@ -155,7 +155,7 @@ class Player(pygame.sprite.Sprite):
 				self.current = 0
 				self.crouchdown = 1
 				self.xMove = 0
-				self.lastkey=self.down
+				self.lastkey=self.keys["down"]
 			else:
 				self.current += 1
 		elif self.running:
