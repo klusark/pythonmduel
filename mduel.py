@@ -305,7 +305,9 @@ class Main():
 	#settings
 		self.settings = ConfigParser.RawConfigParser()
 		self.settings.readfp(open('settings'))
+		self.port = self.settings.getint('net','port')
 		self.stuffs = {}
+		
 	def generateBricks(self):
 		"""platform generator"""
 		platform = []
@@ -558,7 +560,6 @@ class Main():
 	def connects(self):
 		"""Connects to the server"""
 		self.HOST = '127.0.0.1'	# The remote host
-		self.PORT = self.settings.getint('net','port')
 		self.s = socket.socket()
 		try:
 			self.s.connect((self.HOST, self.PORT))
@@ -566,16 +567,16 @@ class Main():
 			print msg[1]
 			return 0
 		return 1
+
 	def binds(self):
 		"""Makes the curret player wait for a connection from another player"""
 		self.HOST = ''
-		self.PORT = self.settings.getint('net','port')			# Arbitrary non-privileged port
 		self.s = socket.socket()
 		self.s.bind((self.HOST, self.PORT))
 		self.s.listen(1)
 		self.conn, self.addr = self.s.accept()
 		print 'Connected by', self.addr
-		#return conn
+
 
 	def pickelForSending(self, player):
 		"""Gets the infermation in the player objet ready for sending"""
@@ -604,7 +605,7 @@ class Main():
 			player.dir = info["dir"]
 		"""for value in info:
 			player.value = info[value]
-			print player.value, player.xMove, value"""
+			print player.value, player.xMove, value""" #does not work yet. want to make it work. may use dicts for info storage in player
 		return player
 	
 if __name__ == '__main__':
