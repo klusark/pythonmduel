@@ -56,7 +56,10 @@ class Player(pygame.sprite.Sprite):
 		self.fallingforwards = 0
 		self.fallingback = 0
 		self.rolling = 0
-		self.gravity = 6
+		self.gravity = 1
+		self.maxVol = 6
+		self.inAir = 0
+		self.jumpfwd = 0
 		self.name = "Unset"
 		self.hitmask = pygame.surfarray.array_colorkey(self.image)
 		self.image.unlock()
@@ -65,17 +68,19 @@ class Player(pygame.sprite.Sprite):
 	def loadAnm(self,name,num):
 		self.frames[name]=[]
 		for i in range(num):
-			image = loadImage(name+str(i)+".png",0,-1)
+			image = loadImage(name+str(i)+".png", 0, -1)
 			self.frames[name].append(image)
 			
 	def loadImages(self):
 		"""loads images"""
 		self.loadAnm("run", 4)
+		self.loadAnm("jumpfwd", 3)
 		self.loadAnm("fallforwards", 2)
 		self.loadAnm("fallback", 2)
 		self.loadAnm("crouch", 2)
 		self.loadAnm("roll", 4)
-		self.stand, self.rect = loadImage('stand.png', 1,-1)
+		self.fall = loadImage('fall.png', 0, -1)
+		self.stand, self.rect = loadImage('stand.png', 1, -1)
 		
 	def setKeys(self, right = K_RIGHT, left = K_LEFT, down = K_DOWN, up = K_UP):
 		"""setKeys(right key, left key, crouch key)
@@ -88,28 +93,43 @@ class Player(pygame.sprite.Sprite):
 		
 	def MoveKeyDown(self, key):
 		"""Event fuction for when any keys bound to the current player object are hit"""
-		if not self.crouching:
-			if key == self.keys["right"]:
-				self.xMove = 6
-				self.dir = 0
-				self.running = 1
-			elif key == self.keys["left"]:
-				self.xMove = -6
-				self.dir = 1
-				self.running = 1
-		if not self.running:
-			if key == self.keys["down"]:
-				self.crouchdown = 1
-				self.crouching = 1
-				self.current = 0
-		elif self.running:
-			if key == self.keys["down"]:
-				self.rolling = 1
-				self.current = 0
+		if not self.inAir:
+			if not self.crouching:
 				if key == self.keys["right"]:
-					self.xMove = 8
+					self.xMove = 6
+					self.dir = 0
+					self.running = 1
 				elif key == self.keys["left"]:
-					self.xMove = -8
+					self.xMove = -6
+					self.dir = 1
+					self.running = 1
+			if not self.running:
+				if key == self.keys["down"]:
+					self.crouchdown = 1
+					self.crouching = 1
+					self.current = 0
+				if key == self.keys["up"]:
+					print "upjump"
+			elif self.running:
+				if key == self.keys["down"]:
+					self.rolling = 1
+					self.current = 0
+					if key == self.keys["right"]:
+						self.xMove = 8
+					elif key == self.keys["left"]:
+						self.xMove = -8
+				elif key == self.keys["up"]:
+					if key == self.keys["right"]:
+						self.xMove = 10
+					elif key == self.keys["left"]:
+						self.xMove = -10
+					self.yMove = -6
+					self.jumpfwd = 1
+					self.inAir = 1
+					self.current = 0
+					#self.running = 0
+					#print "jump fwd"
+
 		if not self.lastkey:
 			self.lastkey = key
 
@@ -163,32 +183,44 @@ class Player(pygame.sprite.Sprite):
 				self.lastkey=self.keys["down"]
 			else:
 				self.current += 1
+		elif self.jumpfwd:
+			self.image = self.frames["jumpfwd"][self.current]
+			if self.current == len(self.frames["jumpfwd"]) -1:
+				self.jumpfwd = 0
+				self.current = 0
+			else:
+				self.current += 1
 		elif self.running:
 			self.image = self.frames["run"][self.current]
 			if self.current == len(self.frames["run"]) -1:
 				self.current = 0
 			else:
 				self.current += 1
+		elif self.inAir:
+			self.image = self.fall
 		else:
 			self.crouchup = 0
 			self.crouchdown = 0
 			self.image = self.stand
 		if self.dir==1:
 			self.image = pygame.transform.flip(self.image, 1, 0)
-		self.yMove = self.gravity
+		if self.yMove < self.maxVol:
+			self.yMove += self.gravity
 		
 		move = self.feetRect.move(0, self.yMove)
-		print move.collidelist(self.platform)
+		#print move.collidelist(self.platform)
 		if move.collidelist(self.platform) == -1:
 			self.rect.move_ip(0, self.yMove)
 			self.feetRect.move_ip(0, self.yMove)
 		else:
+			self.inAir = 0
 			for i in range(self.gravity+1, 0, -1):
 				move = self.feetRect.move(0, i)
 				
 				if move.collidelist(self.platform) == -1:
 					self.rect.move_ip(0, i)
 					self.feetRect.move_ip(0, i)
+					
 		self.rect.move_ip(self.xMove,0)
 		self.feetRect.move_ip(self.xMove,0)
 
@@ -199,7 +231,6 @@ class Player(pygame.sprite.Sprite):
 			self.running = 0
 			self.current = 0
 			self.xMove = 6
-			
 		else:
 			self.fallingforwards = 0
 			
@@ -284,7 +315,7 @@ class Main():
 			self.platfromRects.append(i.rectTop)
 		#self.player1 = Player(39, 288, self.platfromRects)
 		self.player1 = Player(0, 0, self.platfromRects)
-		self.player1.setKeys(K_d, K_a, K_s)
+		self.player1.setKeys(K_d, K_a, K_s, K_w)
 		self.player2 = Player(457, 288, self.platfromRects)
 		self.player2.dir = 1
 		self.player2.setKeys()
@@ -537,7 +568,7 @@ class Main():
 						self.setNewKey("Right", "right", stri, 50)
 						self.setNewKey("Left", "left", stri, 75)
 						self.setNewKey("Crouch", "down", stri, 100)
-						self.setNewKey("Jump", "up", stri, 100)
+						self.setNewKey("Jump", "up", stri, 125)
 
 				elif self.page is 9:
 					self.text = self.font.render(self.player1.name+" vs. "+self.player2.name, 0, (164, 64, 164))
