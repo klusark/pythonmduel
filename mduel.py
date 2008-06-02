@@ -34,13 +34,16 @@ def loadImage(name, rect, colorkey=None):
 #classes for our game objects
 class Player(pygame.sprite.Sprite):
 	"""The Payer class"""
-	def __init__(self, x = 0, y = 0):
+	def __init__(self, x, y, platform):
 		"""Initializes Player class"""
 		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
 		self.frames = {}
 		self.loadImages()
+		self.rect.inflate_ip(-10, 0)
 		self.image = self.stand
 		self.rect.move_ip(x,y)
+		self.feetRect = pygame.Rect(x+5, y+41, 38, 7)
+		self.platform = platform
 		self.xMove = 0
 		self.yMove = 0
 		self.lastkey = 0
@@ -53,6 +56,7 @@ class Player(pygame.sprite.Sprite):
 		self.fallingforwards = 0
 		self.fallingback = 0
 		self.rolling = 0
+		self.gravity = 6
 		self.name = "Unset"
 		self.hitmask = pygame.surfarray.array_colorkey(self.image)
 		self.image.unlock()
@@ -73,13 +77,14 @@ class Player(pygame.sprite.Sprite):
 		self.loadAnm("roll", 4)
 		self.stand, self.rect = loadImage('stand.png', 1,-1)
 		
-	def setKeys(self, right = K_RIGHT, left = K_LEFT, down = K_DOWN):
+	def setKeys(self, right = K_RIGHT, left = K_LEFT, down = K_DOWN, up = K_UP):
 		"""setKeys(right key, left key, crouch key)
 		Sets the keys for the player object"""
 		self.keys = {}
 		self.keys["right"] = right
 		self.keys["left"] = left
 		self.keys["down"] = down
+		self.keys["up"] = up
 		
 	def MoveKeyDown(self, key):
 		"""Event fuction for when any keys bound to the current player object are hit"""
@@ -170,10 +175,22 @@ class Player(pygame.sprite.Sprite):
 			self.image = self.stand
 		if self.dir==1:
 			self.image = pygame.transform.flip(self.image, 1, 0)
-		#if self.xMove > 0:
-		#	self.xMove -= 1
+		self.yMove = self.gravity
 		
-		self.rect.move_ip(self.xMove,self.yMove)
+		move = self.feetRect.move(0, self.yMove)
+		print move.collidelist(self.platform)
+		if move.collidelist(self.platform) == -1:
+			self.rect.move_ip(0, self.yMove)
+			self.feetRect.move_ip(0, self.yMove)
+		else:
+			for i in range(self.gravity+1, 0, -1):
+				move = self.feetRect.move(0, i)
+				
+				if move.collidelist(self.platform) == -1:
+					self.rect.move_ip(0, i)
+					self.feetRect.move_ip(0, i)
+		self.rect.move_ip(self.xMove,0)
+		self.feetRect.move_ip(self.xMove,0)
 
 	def collide(self, dir, speed):
 		"""Acts on collitions"""
@@ -197,6 +214,7 @@ class Platform(pygame.sprite.Sprite):
 		self.hitmask = pygame.surfarray.array_colorkey(self.image)
 		self.image.unlock()
 		self.image.unlock()
+		self.rectTop = pygame.Rect(x, y, 14, 1)
 
 class Mallow(pygame.sprite.Sprite):
 	"""Mallow Sprite"""
@@ -204,7 +222,7 @@ class Mallow(pygame.sprite.Sprite):
 		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
 		self.image, self.rect = loadImage('mallow.png', 1)
 		self.rect.move_ip(x, y)
-		
+
 class MallowAnm(pygame.sprite.Sprite):
 	"""MallowAnm Sprite"""
 	def __init__(self,x,y,frame):
@@ -261,9 +279,13 @@ class Main():
 		self.platform = self.generateBricks()
 		self.groundGroup = pygame.sprite.Group()
 		self.groundGroup.add(self.platform)
-		self.player1 = Player(39, 288)
+		self.platfromRects = []
+		for i in self.platform:
+			self.platfromRects.append(i.rectTop)
+		#self.player1 = Player(39, 288, self.platfromRects)
+		self.player1 = Player(0, 0, self.platfromRects)
 		self.player1.setKeys(K_d, K_a, K_s)
-		self.player2 = Player(457, 288)
+		self.player2 = Player(457, 288, self.platfromRects)
 		self.player2.dir = 1
 		self.player2.setKeys()
 		self.rope = self.generateRopes()
@@ -284,7 +306,7 @@ class Main():
 	#Odds and ends
 		self.menu = 1
 		self.playing = 0
-		self.page = 0 #
+		self.page = 0
 		self.bind = 0
 		self.connect = 0
 		self.bound = 0
@@ -334,7 +356,7 @@ class Main():
 		rope.append(Rope(56*2, 3*2, 9*2))
 		rope.append(Rope((256-56)*2, 3*2, 9*2))
 		return rope
-		
+
 	def mainloop(self):
 		"""The games main loop"""
 		while 1:
@@ -364,7 +386,7 @@ class Main():
 				if len(PixelPerfect.spritecollide_pp(self.player1, self.playerGroup, 0)) == 2:
 					self.player1.collide(self.player2.dir, self.player2.xMove)
 					self.player2.collide(self.player1.dir, self.player1.xMove)
-				
+
 				#Draw Everything
 				self.screen.blit(self.background, (0, 0))
 				self.allsprites.draw(self.screen)
@@ -515,6 +537,7 @@ class Main():
 						self.setNewKey("Right", "right", stri, 50)
 						self.setNewKey("Left", "left", stri, 75)
 						self.setNewKey("Crouch", "down", stri, 100)
+						self.setNewKey("Jump", "up", stri, 100)
 
 				elif self.page is 9:
 					self.text = self.font.render(self.player1.name+" vs. "+self.player2.name, 0, (164, 64, 164))
