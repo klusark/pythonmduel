@@ -4,7 +4,7 @@ Mduel
 """
 
 #Import Modules
-import pygame, cPickle, PixelPerfect, socket, ConfigParser
+import pygame, cPickle, PixelPerfect, socket, ConfigParser, math
 #from socket import socket
 from os import path
 from re import findall
@@ -60,6 +60,7 @@ class Player(pygame.sprite.Sprite):
 		self.maxVol = 6
 		self.inAir = 0
 		self.jumpfwd = 0
+		self.noKeys = 0
 		self.name = "Unset"
 		self.hitmask = pygame.surfarray.array_colorkey(self.image)
 		self.image.unlock()
@@ -135,15 +136,16 @@ class Player(pygame.sprite.Sprite):
 
 	def MoveKeyUp(self, key):
 		"""Event fuction for when any keys bound to the current player object are let go of"""
-		if key == self.lastkey:
-			if key == self.keys["down"]:
-				self.crouchup = 1
-				self.crouchdown = 0
-			self.lastkey = 0
-			self.xMove = 0
-			self.running = 0
-			#self.crouching = 0
-			self.current = 0
+		if not self.noKeys:
+			if key == self.lastkey:
+				if key == self.keys["down"]:
+					self.crouchup = 1
+					self.crouchdown = 0
+				self.lastkey = 0
+				self.xMove = 0
+				self.running = 0
+				#self.crouching = 0
+				self.current = 0
 
 	def update(self):
 		if self.fallingforwards:
@@ -158,7 +160,8 @@ class Player(pygame.sprite.Sprite):
 			if self.current == len(self.frames["fallback"]) -1:
 				self.current = 0
 				self.fallingback = 0
-				self.xMove = 0
+				self.noKeys = 0
+				#self.xMove = 0
 			else:
 				self.current += 1
 			self.image = self.frames["fallback"][self.current]
@@ -204,11 +207,11 @@ class Player(pygame.sprite.Sprite):
 			self.image = self.stand
 		if self.dir==1:
 			self.image = pygame.transform.flip(self.image, 1, 0)
-		if self.yMove < self.maxVol:
-			self.yMove += self.gravity
+		#if self.yMove < self.maxVol:
+		#	self.yMove += self.gravity
 		
 		move = self.feetRect.move(0, self.yMove)
-		#print move.collidelist(self.platform)
+		
 		if move.collidelist(self.platform) == -1:
 			self.rect.move_ip(0, self.yMove)
 			self.feetRect.move_ip(0, self.yMove)
@@ -220,21 +223,26 @@ class Player(pygame.sprite.Sprite):
 				if move.collidelist(self.platform) == -1:
 					self.rect.move_ip(0, i)
 					self.feetRect.move_ip(0, i)
-					
 		self.rect.move_ip(self.xMove,0)
 		self.feetRect.move_ip(self.xMove,0)
 
 	def collide(self, dir, speed):
 		"""Acts on collitions"""
-		if self.xMove == 0 and speed == -6 or speed == 6:
-			self.fallingback = 1
-			self.running = 0
-			self.current = 0
-			self.xMove = 6
-		else:
-			self.fallingforwards = 0
+		#if self.xMove == -6 or self.xMove == 6 and speed == -6 or speed == 6:
+		#	if self.xMove == -6:
+		#		self.xMove = 6
+		#	else:
+		#		self.xMove = -6
+		#	self.fallingback = 1
+		#	self.running = 0
+		#	self.current = 0
+		#	self.noKeys = 1
+			#self.xMove = 6
+		#else:
+		#	self.fallingforwards = 0
 			
 		#print otherdir, speed
+		return
 	
 class Platform(pygame.sprite.Sprite):
 	"""Platform Sprite"""
@@ -258,21 +266,70 @@ class MallowAnm(pygame.sprite.Sprite):
 	"""MallowAnm Sprite"""
 	def __init__(self,x,y,frame):
 		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
-		self.image, self.rect = loadImage('mallow0.png', 1, -1)
+		self.rect = pygame.Rect(0, 0, 16, 8)
 		self.rect.move_ip(x, y)
-		self.anmframe = []
-		for i in range(4):
-			image = loadImage("mallow"+str(i)+".png",0,-1)
-			self.anmframe.append(image)
+		self.frames = {}
+		self.loadAnm("mallow", 4)
 		self.current = frame
+	
+	def loadAnm(self,name,num):
+		self.frames[name]=[]
+		for i in range(num):
+			image = loadImage(name+str(i)+".png", 0, -1)
+			self.frames[name].append(image)
 
 	def update(self):
-		if self.current == len(self.anmframe)-1:
+		if self.current == len(self.frames["mallow"])-1:
 			self.current = 0
 		else:
 			self.current += 1
-		self.image = self.anmframe[self.current]
+		self.image = self.frames["mallow"][self.current]
 
+class Bubble(pygame.sprite.Sprite):
+	"""MallowAnm Sprite"""
+	def __init__(self,x,y):
+		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
+		self.rect = pygame.Rect(0, 0, 16, 16)
+		self.rect.move_ip(x, y)
+		self.frames = {}
+		self.loadAnm("bubble", 3)
+		self.current = 0
+		#load weapon images
+		self.weapons = {}
+		self.weapons["gun"] = loadImage('gun.png', 0, -1)
+		self.weapons["hook"] = loadImage('hook.png', 0, -1)
+		self.weapons["x"] = loadImage('x.png', 0, -1)
+		self.weapons["parachute"] = loadImage('parachute.png', 0, -1)
+		self.weapons["nuke"] = loadImage('nuke.png', 0, -1)
+		self.weapons["boot"] = loadImage('boot.png', 0, -1)
+		self.weapons["death"] = loadImage('death.png', 0, -1)
+		self.weapons["invis"] = loadImage('invis.png', 0, -1)
+		self.weapons["10000v"] = loadImage('10000v.png', 0, -1)
+		self.weapons["mine"] = loadImage('mine.png', 0, -1)
+		self.currentWeapon = self.weapons.keys()[randint(0,9)]
+		self.vector = (40,10)
+		
+	def loadAnm(self,name,num):
+		self.frames[name]=[]
+		for i in range(num):
+			image = loadImage(name+str(i)+".png", 0, -1)
+			self.frames[name].append(image)
+
+	def update(self):
+		if self.current == len(self.frames["bubble"])-1:
+			self.current = 0
+		else:
+			self.current += 1
+		self.image = self.frames["bubble"][self.current]
+		self.image.blit(self.weapons[self.currentWeapon], (0, 0))
+		
+		newpos = self.calcnewpos(self.rect,self.vector)
+		self.rect = newpos
+
+	def calcnewpos(self,rect,vector):
+		(angle,z) = vector
+		(dx,dy) = (z*math.cos(angle),z*math.sin(angle))
+		return rect.move(dx,dy)
 class Rope(pygame.sprite.Sprite):
 	"""The rope"""
 	def __init__(self,x,y,len):
@@ -316,8 +373,8 @@ class Main():
 		self.platfromRects = []
 		for i in self.platform:
 			self.platfromRects.append(i.rectTop)
-		#self.player1 = Player(39, 288, self.platfromRects)
-		self.player1 = Player(0, 0, self.platfromRects)
+		self.player1 = Player(39, 288, self.platfromRects)
+		#self.player1 = Player(0, 0, self.platfromRects)
 		self.player1.setKeys(K_d, K_a, K_s, K_w)
 		self.player2 = Player(457, 288, self.platfromRects)
 		self.player2.dir = 1
@@ -334,9 +391,11 @@ class Main():
 				frame = 0
 			self.mallows.append(MallowAnm(i*(16*2),400-16-30,frame))
 			frame +=1
-		self.allsprites = pygame.sprite.RenderPlain((self.player1, self.player2, self.platform, self.mallows, self.mallow, self.rope))
+		self.bubble1 = Bubble(50, 50)
+		self.allsprites = pygame.sprite.RenderPlain((self.player1, self.player2, self.platform, self.mallows, self.mallow, self.rope, self.bubble1))
 		self.playerGroup = pygame.sprite.Group()
 		self.playerGroup.add(self.player1, self.player2)
+		
 	#Odds and ends
 		self.menu = 1
 		self.playing = 0
@@ -366,7 +425,10 @@ class Main():
 		self.settings.readfp(open('settings'))
 		self.port = self.settings.getint('net','port')
 
-			
+		self.sideLeft = pygame.Rect(0, 0, 0, 640)
+		self.sideRight = pygame.Rect(400, 0, 0, 640)
+		self.sideTop = pygame.Rect(400, 0, 0, 640)
+		self.sideBottom = pygame.Rect(400, 0, 0, 640)
 	def mainloop(self):
 		"""The games main loop"""
 		while 1:
@@ -377,104 +439,19 @@ class Main():
 				if len(PixelPerfect.spritecollide_pp(self.player1, self.playerGroup, 0)) == 2:
 					self.player1.collide(self.player2.dir, self.player2.xMove)
 					self.player2.collide(self.player1.dir, self.player1.xMove)
-
 				#Draw Everything
 				self.screen.blit(self.background, (0, 0))
 				self.allsprites.draw(self.screen)
 				pygame.display.flip()
-				
 			if self.menu:
-				"""Pages are 0: shows intro image 1: main menu 2: view fighters 3: set controls 9: displays who is playing when game is starting 10: get game started"""
-
 				self.inMenuEvents()
-				if self.page is 0:
-					self.background.blit(self.introimage, (0, 0))
-				elif self.page is 1:
-					if self.selected == -1:
-						self.selected = 2
-					if self.selected == 3:
-						self.selected = 0
-					if not self.drawMenuItem("Begin Game",		0, 50, 9):
-						continue
-					if not self.drawMenuItem("View Fighters",	1, 70, 2):
-						continue
-					if not self.drawMenuItem("Set Controls",	2, 90, 3):
-						continue
-				elif self.page is 2:
-					for i in range(len(self.players)):
-						if self.players[i] == self.player1.name:
-							self.colour = (176, 0, 0)
-						elif self.players[i] == self.player2.name:
-							self.colour = (0, 48, 192)
-						else:
-							self.colour = (164, 64, 164)
-						
-						y=144+18*(i+1)
-						self.text = self.font2.render(self.players[i], 0, self.colour)
-						self.background.blit(self.text, (0, y))
-						
-						self.text = self.font2.render(self.playerinfo[i][0], 0, self.colour)
-						self.background.blit(self.text, (150, y))
-						
-						self.text = self.font2.render(self.playerinfo[i][1], 0, self.colour)
-						self.background.blit(self.text, (250, y))
-						
-						self.text = self.font2.render(self.playerinfo[i][2], 0, self.colour)
-						self.background.blit(self.text, (300, y))
-						
-						self.text = self.font2.render(self.playerinfo[i][3], 0, self.colour)
-						self.background.blit(self.text, (400, y))
-						
-						self.text = self.font2.render(self.playerinfo[i][4], 0, self.colour)
-						self.background.blit(self.text, (500, y))
-						
-					self.text = self.font.render("Name", 0, (255, 255, 255))
-					self.background.blit(self.text, (0,140))
-					self.text = self.font.render("Rank", 0, (255, 255, 255))
-					self.background.blit(self.text, (150,140))
-					self.text = self.font.render("W", 0, (255, 255, 255))
-					self.background.blit(self.text, (250,140))
-					self.text = self.font.render("L", 0, (255, 255, 255))
-					self.background.blit(self.text, (300,140))
-					self.text = self.font.render("S", 0, (255, 255, 255))
-					self.background.blit(self.text, (400,140))
-					self.text = self.font.render("FIDS", 0, (255, 255, 255))
-					self.background.blit(self.text, (500,140))
-				elif self.page is 3:
-					self.posinfo={}
-					self.posinfo["p1"]=self.player1
-					self.posinfo["p2"]=self.player2
-					self.posinfo["x1"]=50
-					self.posinfo["x2"]=450
-					self.posinfo["colour1"]=(176, 0, 0)
-					self.posinfo["colour2"]=(0, 48, 192)
-					for i in range(1,3):
-						stri = str(i)
-
-						self.text = self.font.render("Player "+str(i), 0, self.posinfo["colour"+stri])
-						self.background.blit(self.text, (self.posinfo["x"+stri],25))
-						
-						self.setNewKey("Right", "right", stri, 50)
-						self.setNewKey("Left", "left", stri, 75)
-						self.setNewKey("Crouch", "down", stri, 100)
-						self.setNewKey("Jump", "up", stri, 125)
-
-				elif self.page is 9:
-					self.text = self.font.render(self.player1.name+" vs. "+self.player2.name, 0, (164, 64, 164))
-					self.pos = self.text.get_rect(center=(self.background.get_width()/2,self.background.get_height()/2))
-					self.background.blit(self.text, self.pos)
-				elif self.page is 10:
-					self.playing = 1
-					self.menu = 0
-					self.background.fill((0, 0, 0))
-
+				self.drawPage()
 				self.screen.blit(self.background, (0, 0))
 				pygame.display.flip()
 			if self.bind:
 				if not self.bound:
 					self.binds()
 					self.bound = 1
-
 				self.player2 = self.depickelForRecving(self.conn.recv(512), self.player2)
 				self.conn.send(self.pickelForSending(self.player1))
 			if self.connect:
@@ -485,11 +462,93 @@ class Main():
 					else:
 						self.connect=0
 						continue
-
 				self.s.send(self.picelForSending(self.player2))
 				self.player1 = self.depickelForRecving(self.s.recv(512), self.player1)
 			if self.quit:
 				return
+
+	def drawPage(self):
+		"""Pages are 0: shows intro image 1: main menu 2: view fighters 3: set controls 9: displays who is playing when game is starting 10: get game started"""
+		if self.page is 0:
+			self.background.blit(self.introimage, (0, 0))
+		elif self.page is 1:
+			if self.selected == -1:
+				self.selected = 2
+			if self.selected == 3:
+				self.selected = 0
+			if not self.drawMenuItem("Begin Game",		0, 50, 9):
+				return
+			if not self.drawMenuItem("View Fighters",	1, 70, 2):
+				return
+			if not self.drawMenuItem("Set Controls",	2, 90, 3):
+				return
+		elif self.page is 2:
+			for i in range(len(self.players)):
+				if self.players[i] == self.player1.name:
+					self.colour = (176, 0, 0)
+				elif self.players[i] == self.player2.name:
+					self.colour = (0, 48, 192)
+				else:
+					self.colour = (164, 64, 164)
+				
+				y=144+18*(i+1)
+				self.text = self.font2.render(self.players[i], 0, self.colour)
+				self.background.blit(self.text, (0, y))
+				
+				self.text = self.font2.render(self.playerinfo[i][0], 0, self.colour)
+				self.background.blit(self.text, (150, y))
+				
+				self.text = self.font2.render(self.playerinfo[i][1], 0, self.colour)
+				self.background.blit(self.text, (250, y))
+				
+				self.text = self.font2.render(self.playerinfo[i][2], 0, self.colour)
+				self.background.blit(self.text, (300, y))
+				
+				self.text = self.font2.render(self.playerinfo[i][3], 0, self.colour)
+				self.background.blit(self.text, (400, y))
+				
+				self.text = self.font2.render(self.playerinfo[i][4], 0, self.colour)
+				self.background.blit(self.text, (500, y))
+				
+			self.text = self.font.render("Name", 0, (255, 255, 255))
+			self.background.blit(self.text, (0,140))
+			self.text = self.font.render("Rank", 0, (255, 255, 255))
+			self.background.blit(self.text, (150,140))
+			self.text = self.font.render("W", 0, (255, 255, 255))
+			self.background.blit(self.text, (250,140))
+			self.text = self.font.render("L", 0, (255, 255, 255))
+			self.background.blit(self.text, (300,140))
+			self.text = self.font.render("S", 0, (255, 255, 255))
+			self.background.blit(self.text, (400,140))
+			self.text = self.font.render("FIDS", 0, (255, 255, 255))
+			self.background.blit(self.text, (500,140))
+		elif self.page is 3:
+			self.posinfo={}
+			self.posinfo["p1"]=self.player1
+			self.posinfo["p2"]=self.player2
+			self.posinfo["x1"]=50
+			self.posinfo["x2"]=450
+			self.posinfo["colour1"]=(176, 0, 0)
+			self.posinfo["colour2"]=(0, 48, 192)
+			for i in range(1,3):
+				stri = str(i)
+
+				self.text = self.font.render("Player "+str(i), 0, self.posinfo["colour"+stri])
+				self.background.blit(self.text, (self.posinfo["x"+stri],25))
+				
+				self.setNewKey("Right", "right", stri, 50)
+				self.setNewKey("Left", "left", stri, 75)
+				self.setNewKey("Crouch", "down", stri, 100)
+				self.setNewKey("Jump", "up", stri, 125)
+
+		elif self.page is 9:
+			self.text = self.font.render(self.player1.name+" vs. "+self.player2.name, 0, (164, 64, 164))
+			self.pos = self.text.get_rect(center=(self.background.get_width()/2,self.background.get_height()/2))
+			self.background.blit(self.text, self.pos)
+		elif self.page is 10:
+			self.playing = 1
+			self.menu = 0
+			self.background.fill((0, 0, 0))
 
 	def generateBricks(self):
 		"""platform generator"""
@@ -609,7 +668,7 @@ class Main():
 		self.HOST = '127.0.0.1'	# The remote host
 		self.s = socket.socket()
 		try:
-			self.s.connect((self.HOST, self.PORT))
+			self.s.connect((self.HOST, self.port))
 		except socket.error, msg:
 			print msg[1]
 			return 0
@@ -619,7 +678,7 @@ class Main():
 		"""Makes the curret player wait for a connection from another player"""
 		self.HOST = ''
 		self.s = socket.socket()
-		self.s.bind((self.HOST, self.PORT))
+		self.s.bind((self.HOST, self.port))
 		self.s.listen(1)
 		self.conn, self.addr = self.s.accept()
 		print 'Connected by', self.addr
