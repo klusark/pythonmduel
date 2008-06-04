@@ -285,7 +285,10 @@ class Main():
 	def __init__(self):
 		"""Init function for the main class. Sets up everything."""
 	#Initialize Everything
-		pygame.init()
+		#pygame.init()
+		pygame.font.init()
+		pygame.display.init()
+		
 		
 		self.screen = pygame.display.set_mode((640, 400))
 		pygame.display.set_caption('Mduel')
@@ -303,8 +306,8 @@ class Main():
 		pygame.display.flip()
 		
 	#Font
-		pygame.font.init()
 		self.font = pygame.font.Font("data/marshmallowDuel.ttf", 28)
+		self.font2 = pygame.font.Font("data/marshmallowDuel.ttf", 20)
 	#Prepare Game Objects
 		self.clock = pygame.time.Clock()
 		self.platform = self.generateBricks()
@@ -344,6 +347,9 @@ class Main():
 		self.connected = 0
 		self.selected =  -2
 		self.getnewkey = 0
+		self.menuItems = [""]*3#number of main menu items
+		self.keyItems = {}
+		self.quit = 0
 	#players
 		self.playerfile = open("players","r")
 		self.players = []
@@ -359,60 +365,14 @@ class Main():
 		self.settings = ConfigParser.RawConfigParser()
 		self.settings.readfp(open('settings'))
 		self.port = self.settings.getint('net','port')
-		self.stuffs = {}
-		
-	def generateBricks(self):
-		"""platform generator"""
-		platform = []
-		for i in range(51):
-			if (i<3):
-				platform.append(Platform((i*16+24)*2, (192-32+8)*2))
-			elif (i<6):
-				platform.append(Platform((256-24-((i-3)*16))*2, (192-32+8)*2))
-			elif (i>47):
-				platform.append(Platform((256-16-8-((i-47)*16))*2, (192-32+8+4*-32)*2))
-			elif (i>44):
-				platform.append(Platform(((i-45)*16+16+16+8)*2, (192-32+8+4*-32)*2))
-			else:
-				j = i-6;
-				col = j%13;
-				row = j/13;
-				if (randint(0,10) < 7):
-					platform.append(Platform(((col+1)*16+16)*2, (192-32+8+((row+1)*-32))*2))
-		return platform
 
-	def generateRopes(self):
-		"""Rope generator"""
-		rope = []
-		rope.append(Rope(56*2, 3*2, 9*2))
-		rope.append(Rope((256-56)*2, 3*2, 9*2))
-		return rope
-
+			
 	def mainloop(self):
 		"""The games main loop"""
 		while 1:
 			self.clock.tick(10)
 			if self.playing:
-				#Handle Input Events
-				for event in pygame.event.get():
-					if event.type == QUIT:
-						return
-					elif event.type == KEYDOWN:
-						if event.key in self.player1.keys.values():
-							self.player1.MoveKeyDown(event.key)
-						if event.key in self.player2.keys.values():
-							self.player2.MoveKeyDown(event.key)
-						#if event.key == K_DOWN:
-						#	player1.yMove = 5
-						if event.key == K_b:
-							self.bind = 1
-						if event.key == K_c:
-							self.connect = 1
-					elif event.type == KEYUP:
-						if event.key in self.player1.keys.values():
-							self.player1.MoveKeyUp(event.key)
-						if event.key in self.player2.keys.values():
-							self.player2.MoveKeyUp(event.key)
+				self.inGameEvents()
 				self.allsprites.update()
 				if len(PixelPerfect.spritecollide_pp(self.player1, self.playerGroup, 0)) == 2:
 					self.player1.collide(self.player2.dir, self.player2.xMove)
@@ -422,48 +382,11 @@ class Main():
 				self.screen.blit(self.background, (0, 0))
 				self.allsprites.draw(self.screen)
 				pygame.display.flip()
+				
 			if self.menu:
 				"""Pages are 0: shows intro image 1: main menu 2: view fighters 3: set controls 9: displays who is playing when game is starting 10: get game started"""
-				for event in pygame.event.get():
-					if event.type == QUIT:
-						return
-					elif event.type == KEYDOWN and event.key == K_ESCAPE:
-						self.page = 1
-						self.background.fill((0, 0, 0))
-					elif event.type == KEYDOWN:
-						if self.page is 0:
-							if event.key is K_SPACE:
-								self.page = 1
-								self.background.fill((0, 0, 0))
-						if self.page is 1:
-							if event.key == K_DOWN:
-								if self.selected == -2:
-									self.selected = 2
-								self.selected +=1
-							if event.key == K_UP:
-								if self.selected == -2:
-									self.selected = 0
-								self.selected -=1
 
-							if event.key == K_RETURN:
-								if self.selected == 0:
-									self.page=9
-									self.background.fill((0, 0, 0))
-								elif self.selected == 1:
-									self.page = 2
-									self.background.fill((0, 0, 0))
-								elif self.selected == 2:
-									self.page = 3
-									self.background.fill((0, 0, 0))
-						if self.page is 3:
-							if self.getnewkey:
-								self.posinfo["p"+self.getnewkey[1]].keys[self.getnewkey[0]] = event.key
-								self.getnewkey = 0
-								self.background.fill((0, 0, 0))
-						if self.page is 9:
-							if event.key == K_SPACE:
-								self.page = 10
-							
+				self.inMenuEvents()
 				if self.page is 0:
 					self.background.blit(self.introimage, (0, 0))
 				elif self.page is 1:
@@ -471,48 +394,12 @@ class Main():
 						self.selected = 2
 					if self.selected == 3:
 						self.selected = 0
-					self.menucolour = (255,255,255)
-					#menucolour = (176, 0, 0)
-					if self.selected == 0:
-						self.menucolour = (176, 0, 0)
-					else:
-						self.menucolour = (255,255,255)
-					self.begin = self.font.render("Begin Game", 0, self.menucolour)
-					self.beginpos = self.begin.get_rect(center=(self.background.get_width()/2,50))
-					self.background.blit(self.begin, self.beginpos)
-					
-					if self.selected == 1:
-						self.menucolour = (176, 0, 0)
-					else:
-						self.menucolour = (255,255,255)
-					
-					self.view = self.font.render("View Fighters", 0, self.menucolour)
-					self.viewpos = self.view.get_rect(center=(self.background.get_width()/2,70))
-					self.background.blit(self.view, self.viewpos)
-					
-					if self.selected == 2:
-						self.menucolour = (176, 0, 0)
-					else:
-						self.menucolour = (255,255,255)
-						
-					self.controls = self.font.render("Set Controls", 0, self.menucolour)
-					self.controlspos = self.controls.get_rect(center=(self.background.get_width()/2,90))
-					self.background.blit(self.controls, self.controlspos)
-					
-					
-					#mouse code
-					if self.beginpos.collidepoint(pygame.mouse.get_pos()) == 1 and pygame.mouse.get_pressed()[0]:
-						self.page=9
-						self.background.fill((0, 0, 0))
-
-					if self.viewpos.collidepoint(pygame.mouse.get_pos()) == 1 and pygame.mouse.get_pressed()[0]:
-						self.page = 2
-						self.background.fill((0, 0, 0))
-					
-					if self.controlspos.collidepoint(pygame.mouse.get_pos()) == 1 and pygame.mouse.get_pressed()[0]:
-						self.page = 3
-						self.background.fill((0, 0, 0))
-
+					if not self.drawMenuItem("Begin Game",		0, 50, 9):
+						continue
+					if not self.drawMenuItem("View Fighters",	1, 70, 2):
+						continue
+					if not self.drawMenuItem("Set Controls",	2, 90, 3):
+						continue
 				elif self.page is 2:
 					for i in range(len(self.players)):
 						if self.players[i] == self.player1.name:
@@ -521,23 +408,25 @@ class Main():
 							self.colour = (0, 48, 192)
 						else:
 							self.colour = (164, 64, 164)
-						self.text = self.font.render(self.players[i], 0, self.colour)
-						self.background.blit(self.text, (0,160+40*i))
 						
-						self.text = self.font.render(self.playerinfo[i][0], 0, self.colour)
-						self.background.blit(self.text, (150,160+40*i))
+						y=144+18*(i+1)
+						self.text = self.font2.render(self.players[i], 0, self.colour)
+						self.background.blit(self.text, (0, y))
 						
-						self.text = self.font.render(self.playerinfo[i][1], 0, self.colour)
-						self.background.blit(self.text, (250,160+40*i))
+						self.text = self.font2.render(self.playerinfo[i][0], 0, self.colour)
+						self.background.blit(self.text, (150, y))
 						
-						self.text = self.font.render(self.playerinfo[i][2], 0, self.colour)
-						self.background.blit(self.text, (300,160+40*i))
+						self.text = self.font2.render(self.playerinfo[i][1], 0, self.colour)
+						self.background.blit(self.text, (250, y))
 						
-						self.text = self.font.render(self.playerinfo[i][3], 0, self.colour)
-						self.background.blit(self.text, (400,160+40*i))
+						self.text = self.font2.render(self.playerinfo[i][2], 0, self.colour)
+						self.background.blit(self.text, (300, y))
 						
-						self.text = self.font.render(self.playerinfo[i][4], 0, self.colour)
-						self.background.blit(self.text, (500,160+40*i))
+						self.text = self.font2.render(self.playerinfo[i][3], 0, self.colour)
+						self.background.blit(self.text, (400, y))
+						
+						self.text = self.font2.render(self.playerinfo[i][4], 0, self.colour)
+						self.background.blit(self.text, (500, y))
 						
 					self.text = self.font.render("Name", 0, (255, 255, 255))
 					self.background.blit(self.text, (0,140))
@@ -593,19 +482,123 @@ class Main():
 					if self.connects():
 						self.connected=1
 					#if self.s:
-						
 					else:
 						self.connect=0
 						continue
 
 				self.s.send(self.picelForSending(self.player2))
 				self.player1 = self.depickelForRecving(self.s.recv(512), self.player1)
+			if self.quit:
+				return
+
+	def generateBricks(self):
+		"""platform generator"""
+		platform = []
+		for i in range(51):
+			if (i<3):
+				platform.append(Platform((i*16+24)*2, (192-32+8)*2))
+			elif (i<6):
+				platform.append(Platform((256-24-((i-3)*16))*2, (192-32+8)*2))
+			elif (i>47):
+				platform.append(Platform((256-16-8-((i-47)*16))*2, (192-32+8+4*-32)*2))
+			elif (i>44):
+				platform.append(Platform(((i-45)*16+16+16+8)*2, (192-32+8+4*-32)*2))
+			else:
+				j = i-6;
+				col = j%13;
+				row = j/13;
+				if (randint(0,10) < 7):
+					platform.append(Platform(((col+1)*16+16)*2, (192-32+8+((row+1)*-32))*2))
+		return platform
+
+	def generateRopes(self):
+		"""Rope generator"""
+		rope = []
+		rope.append(Rope(56*2, 3*2, 9*2))
+		rope.append(Rope((256-56)*2, 3*2, 9*2))
+		return rope
+
+	def inGameEvents(self):
+		#Handle Input Events
+		for event in pygame.event.get():
+			if event.type == QUIT:
+				self.quit = 1
+			elif event.type == KEYDOWN:
+				if event.key in self.player1.keys.values():
+					self.player1.MoveKeyDown(event.key)
+				if event.key in self.player2.keys.values():
+					self.player2.MoveKeyDown(event.key)
+				if event.key == K_b:
+					self.bind = 1
+				if event.key == K_c:
+					self.connect = 1
+			elif event.type == KEYUP:
+				if event.key in self.player1.keys.values():
+					self.player1.MoveKeyUp(event.key)
+				if event.key in self.player2.keys.values():
+					self.player2.MoveKeyUp(event.key)
+
+	def inMenuEvents(self):
+		for event in pygame.event.get():
+			if event.type == QUIT:
+				self.quit = 1
+			elif event.type == KEYDOWN and event.key == K_ESCAPE:
+				self.page = 1
+				self.background.fill((0, 0, 0))
+			elif event.type == KEYDOWN:
+				if self.page is 0:
+					if event.key is K_SPACE:
+						self.page = 1
+						self.background.fill((0, 0, 0))
+				if self.page is 1:
+					if event.key == K_DOWN:
+						if self.selected == -2:
+							self.selected = 2
+						self.selected +=1
+					if event.key == K_UP:
+						if self.selected == -2:
+							self.selected = 0
+						self.selected -=1
+
+					if event.key == K_RETURN:
+						if self.selected == 0:
+							self.page=9
+							self.background.fill((0, 0, 0))
+						elif self.selected == 1:
+							self.page = 2
+							self.background.fill((0, 0, 0))
+						elif self.selected == 2:
+							self.page = 3
+							self.background.fill((0, 0, 0))
+				if self.page is 3:
+					if self.getnewkey:
+						self.posinfo["p"+self.getnewkey[1]].keys[self.getnewkey[0]] = event.key
+						self.getnewkey = 0
+						self.background.fill((0, 0, 0))
+				if self.page is 9:
+					if event.key == K_SPACE:
+						self.page = 10
+					
+	def drawMenuItem(self, text, selectId, y, page):
+		if self.selected == selectId:
+			self.menucolour = (176, 0, 0)
+		else:
+			self.menucolour = (255,255,255)
+		text = self.font.render(text, 0, self.menucolour)
+		self.menuItems[selectId] = text.get_rect(center=(self.background.get_width()/2, y))
+		self.background.blit(text, self.menuItems[selectId])
+		
+		if self.menuItems[selectId].collidepoint(pygame.mouse.get_pos()) == 1 and pygame.mouse.get_pressed()[0]:
+			self.page = page
+			self.background.fill((0, 0, 0))
+			return 0
+		return 1
 		
 	def setNewKey(self, name, key, i, y):
 		self.text = self.font.render(name+": "+pygame.key.name(self.posinfo["p"+i].keys[key]), 0, self.posinfo["colour"+i])
-		self.stuffs["textpos"+i] = self.text.get_rect(x=self.posinfo["x"+i],y=y)
-		self.background.blit(self.text, self.stuffs["textpos"+i])
-		if self.stuffs["textpos"+i].collidepoint(pygame.mouse.get_pos()) == 1 and pygame.mouse.get_pressed()[0]:
+		self.keyItems["textpos"+i] = self.text.get_rect(x=self.posinfo["x"+i],y=y)
+		self.background.blit(self.text, self.keyItems["textpos"+i])
+		if self.keyItems["textpos"+i].collidepoint(pygame.mouse.get_pos()) == 1 and pygame.mouse.get_pressed()[0]:
 			self.text = self.font.render("Press new "+name+" key: ", 0, (255,255,255))
 			self.pos = self.text.get_rect(centerx=self.background.get_width()/2,y=350)
 			self.background.blit(self.text, self.pos)
