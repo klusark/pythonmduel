@@ -4,7 +4,7 @@ Mduel
 """
 
 #Import Modules
-import pygame, cPickle, PixelPerfect, socket, ConfigParser, math
+import pygame, cPickle, PixelPerfect, socket, ConfigParser, math, time
 #from socket import socket
 from os import path
 from re import findall
@@ -341,12 +341,11 @@ class Rope(pygame.sprite.Sprite):
 class Main():
 	def __init__(self):
 		"""Init function for the main class. Sets up everything."""
+		time.clock()
 	#Initialize Everything
 		#pygame.init()
 		pygame.font.init()
 		pygame.display.init()
-		
-		
 		self.screen = pygame.display.set_mode((640, 400))
 		pygame.display.set_caption('Mduel')
 		#pygame.mouse.set_visible(0)
@@ -392,6 +391,7 @@ class Main():
 			self.mallows.append(MallowAnm(i*(16*2),400-16-30,frame))
 			frame +=1
 		self.bubble1 = Bubble(50, 50)
+		self.bubble2 = Bubble(50, 50)
 		self.allsprites = pygame.sprite.RenderPlain((self.player1, self.player2, self.platform, self.mallows, self.mallow, self.rope, self.bubble1))
 		self.playerGroup = pygame.sprite.Group()
 		self.playerGroup.add(self.player1, self.player2)
@@ -429,6 +429,7 @@ class Main():
 		self.sideRight = pygame.Rect(400, 0, 0, 640)
 		self.sideTop = pygame.Rect(400, 0, 0, 640)
 		self.sideBottom = pygame.Rect(400, 0, 0, 640)
+		print time.clock()
 	def mainloop(self):
 		"""The games main loop"""
 		while 1:
