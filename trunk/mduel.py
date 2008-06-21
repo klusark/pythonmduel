@@ -2,9 +2,10 @@
 """
 Mduel
 """
-
+import time
+time.clock()
 #Import Modules
-import pygame, cPickle, PixelPerfect, socket, ConfigParser, math, time
+import pygame, cPickle, PixelPerfect, socket, ConfigParser, math, select
 #from socket import socket
 from os import path
 from re import findall
@@ -341,17 +342,15 @@ class Rope(pygame.sprite.Sprite):
 class Main():
 	def __init__(self):
 		"""Init function for the main class. Sets up everything."""
-		time.clock()
+		
 	#Initialize Everything
 		#pygame.init()
 		pygame.font.init()
 		pygame.display.init()
 		self.screen = pygame.display.set_mode((640, 400))
 		pygame.display.set_caption('Mduel')
-		#pygame.mouse.set_visible(0)
 	#Menu
 		self. introimage = loadImage("intro.png",0)
-		#menup2 = loadImage("menup2.png",0)
 	#Create The Backgound
 		self.background = pygame.Surface(self.screen.get_size())
 		self.background = self.background.convert()
@@ -430,6 +429,7 @@ class Main():
 		self.sideTop = pygame.Rect(400, 0, 0, 640)
 		self.sideBottom = pygame.Rect(400, 0, 0, 640)
 		print time.clock()
+
 	def mainloop(self):
 		"""The games main loop"""
 		while 1:
@@ -453,8 +453,11 @@ class Main():
 				if not self.bound:
 					self.binds()
 					self.bound = 1
-				self.player2 = self.depickelForRecving(self.conn.recv(512), self.player2)
-				self.conn.send(self.pickelForSending(self.player1))
+				read, write, err = select.select([self.conn], [self.conn], [])
+				if len(read):
+					self.player2 = self.depickelForRecving(self.conn.recv(512), self.player2)
+				if len(write):
+					self.conn.send(self.pickelForSending(self.player1))
 			if self.connect:
 				if not self.connected:
 					if self.connects():
@@ -463,8 +466,12 @@ class Main():
 					else:
 						self.connect=0
 						continue
-				self.s.send(self.picelForSending(self.player2))
-				self.player1 = self.depickelForRecving(self.s.recv(512), self.player1)
+				read, write, err = select.select([self.s], [self.s], [])
+				if len(read):
+					self.player1 = self.depickelForRecving(self.s.recv(512), self.player1)
+				if len(write):
+					self.s.send(self.pickelForSending(self.player2))
+					
 			if self.quit:
 				return
 
@@ -579,7 +586,7 @@ class Main():
 		return rope
 
 	def inGameEvents(self):
-		#Handle Input Events
+		"""Handle Input Events"""
 		for event in pygame.event.get():
 			if event.type == QUIT:
 				self.quit = 1
