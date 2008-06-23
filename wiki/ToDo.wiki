@@ -1,0 +1,5 @@
+#summary My to do list
+= ToDo =
+ * Clean up init of main class
+ * Better net
+ * Collisions 
