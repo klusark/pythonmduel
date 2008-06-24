@@ -1,9 +1,11 @@
-import pygame, ConfigParser, time, PixelPerfect, cPickle, socket, select
+import pygame, time, PixelPerfect, cPickle, socket, select
+from ConfigParser import RawConfigParser
 from random import randint
 from re import findall
 from os import path
 from pygame.locals import *
 from zlib import compress, decompress
+from zlib import error as zlibError
 import sprites, player
 def loadImage(name, rect, colorkey=None):
 	fullname = path.join('data', name)
@@ -26,10 +28,7 @@ def loadImage(name, rect, colorkey=None):
 class Main():
 	def __init__(self):
 		"""Init function for the main class. Sets up everything."""
-		
 	#Initialize Everything
-		#pygame.init()
-		pygame.font.init()
 		pygame.display.init()
 		self.screen = pygame.display.set_mode((640, 400))
 		pygame.display.set_caption('Mduel')
@@ -38,13 +37,9 @@ class Main():
 	#Create The Backgound
 		self.background = pygame.Surface(self.screen.get_size())
 		self.background = self.background.convert()
-		self.background.fill((0, 0, 0))
-
-	#Display The Background
-		self.screen.blit(self.background, (0, 0))
-		pygame.display.flip()
 		
 	#Font
+		pygame.font.init()
 		self.font = pygame.font.Font("data/marshmallowDuel.ttf", 28)
 		self.font2 = pygame.font.Font("data/marshmallowDuel.ttf", 20)
 	#Prepare Game Objects
@@ -56,10 +51,8 @@ class Main():
 		for i in self.platform:
 			self.platfromRects.append(i.rectTop)
 		self.player1 = player.Player(39, 288, self.platfromRects)
-		#self.player1 = player.Player(0, 0, self.platfromRects)
 		self.player1.setKeys(K_d, K_a, K_s, K_w)
-		self.player2 = player.Player(457, 288, self.platfromRects)
-		self.player2.dir = 1
+		self.player2 = player.Player(457, 288, self.platfromRects, 1)
 		self.player2.setKeys()
 		self.rope = self.generateRopes()
 		self.mallow = []
@@ -104,7 +97,7 @@ class Main():
 		self.player2.name = self.players[1]
 		
 	#settings
-		self.settings = ConfigParser.RawConfigParser()
+		self.settings = RawConfigParser()
 		self.settings.readfp(open('settings'))
 		self.port = self.settings.getint('net','port')
 
@@ -121,9 +114,9 @@ class Main():
 			if self.playing:
 				self.inGameEvents()
 				self.allsprites.update()
-				if len(PixelPerfect.spritecollide_pp(self.player1, self.playerGroup, 0)) == 2:
-					self.player1.collide(self.player2.dir, self.player2.xMove)
-					self.player2.collide(self.player1.dir, self.player1.xMove)
+				#if len(PixelPerfect.spritecollide_pp(self.player1, self.playerGroup, 0)) == 2:
+				#	self.player1.collide(self.player2.dir, self.player2.xMove)
+				#	self.player2.collide(self.player1.dir, self.player1.xMove)
 				#Draw Everything
 				self.screen.blit(self.background, (0, 0))
 				self.allsprites.draw(self.screen)
@@ -138,10 +131,14 @@ class Main():
 					self.binds()
 					self.bound = 1
 				read, write, err = select.select([self.conn], [self.conn], [])
-				if len(read):
-					self.player2 = self.depickelForRecving(self.conn.recv(512), self.player2)
-				if len(write):
-					self.conn.send(self.pickelForSending(self.player1))
+				try:
+					if len(read):
+						self.player2 = self.depickelForRecving(self.conn.recv(512), self.player2)
+					if len(write):
+						self.conn.send(self.pickelForSending(self.player1))
+				except socket.error, msg:
+					print msg
+					self.bind = 0
 			if self.connect:
 				if not self.connected:
 					if self.connects():
@@ -150,11 +147,14 @@ class Main():
 						self.connect=0
 						continue
 				read, write, err = select.select([self.s], [self.s], [])
-				if len(read):
-					self.player1 = self.depickelForRecving(self.s.recv(512), self.player1)
-				if len(write):
-					self.s.send(self.pickelForSending(self.player2))
-					
+				try:
+					if len(read):
+						self.player1 = self.depickelForRecving(self.s.recv(512), self.player1)
+					if len(write):
+						self.s.send(self.pickelForSending(self.player2))
+				except socket.error, msg:
+					print msg
+					self.connect = 0
 			if self.quit:
 				return
 
@@ -378,29 +378,18 @@ class Main():
 	def pickelForSending(self, player):
 		"""Gets the infermation in the player objet ready for sending"""
 		info = {}
-		info["xMove"] =  player.xMove
-		info["yMove"] =  player.yMove
-		info["current"] =  player.current
-		info["running"] =  player.running
-		info["dir"] =  player.dir
+		for value in player.playerVars:
+			info[value] = player.playerVars[value]
 		dump = cPickle.dumps(info)
 		return compress(dump)
 		
 	def depickelForRecving(self, info, player):
 		"""inserts infermation from other client"""
-		info = decompress(info)
+		try:
+			info = decompress(info)
+		except zlibError, msg:
+			print msg
 		info = cPickle.loads(info)
-		if "xMove" in info:
-			player.xMove = info["xMove"]
-		if "yMove" in info:
-			player.yMove = info["yMove"]
-		if "current" in info:
-			player.current = info["current"]
-		if "running" in info:
-			player.running = info["running"]
-		if "dir" in info:
-			player.dir = info["dir"]
-		"""for value in info:
-			player.value = info[value]
-			print player.value, player.xMove, value""" #does not work yet. want to make it work. may use dicts for info storage in player
+		for value in info:
+			player.playerVars[value] = info[value]
 		return player

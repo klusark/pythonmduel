@@ -2,19 +2,12 @@
 """
 Mduel
 """
+#get load time stuff
 import time
 time.clock()
 #Import Modules
-#import pygame, cPickle, socket, math, select
+import main
 
-import main, player, sprites
-
-
-#from random import randint
-
-#from pygame.locals import *
-
-	
 main = main.Main()
 try:
 	main.mainloop()
