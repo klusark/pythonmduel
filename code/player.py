@@ -3,7 +3,7 @@ from pygame.locals import *
 import main
 class Player(pygame.sprite.Sprite):
 	"""The Payer class"""
-	def __init__(self, x, y, platform):
+	def __init__(self, x, y, platform, dir = 0):
 		"""Initializes Player class"""
 		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
 		self.frames = {}
@@ -13,13 +13,14 @@ class Player(pygame.sprite.Sprite):
 		self.rect.move_ip(x,y)
 		self.feetRect = pygame.Rect(x+5, y+41, 38, 7)
 		self.platform = platform
-		self.xMove = 0
-		self.yMove = 0
+		self.playerVars = {}
+		self.playerVars['xMove'] = 0
+		self.playerVars['yMove'] = 0
+		self.playerVars['current'] = 0
+		self.playerVars['running'] = 0
+		self.playerVars['dir'] = 0
 		self.lastkey = 0
-		self.current = 0
 		self.crouching = 0
-		self.running = 0
-		self.dir = 0
 		self.crouchdown = 0
 		self.crouchup = 0
 		self.fallingforwards = 0
@@ -66,38 +67,38 @@ class Player(pygame.sprite.Sprite):
 		if not self.inAir:
 			if not self.crouching:
 				if key == self.keys["right"]:
-					self.xMove = 6
-					self.dir = 0
-					self.running = 1
+					self.playerVars['xMove'] = 6
+					self.playerVars['dir'] = 0
+					self.playerVars['running'] = 1
 				elif key == self.keys["left"]:
-					self.xMove = -6
-					self.dir = 1
-					self.running = 1
-			if not self.running:
+					self.playerVars['xMove'] = -6
+					self.playerVars['dir'] = 1
+					self.playerVars['running'] = 1
+			if not self.playerVars['running']:
 				if key == self.keys["down"]:
 					self.crouchdown = 1
 					self.crouching = 1
-					self.current = 0
+					self.playerVars['current'] = 0
 				if key == self.keys["up"]:
 					print "upjump"
-			elif self.running:
+			elif self.playerVars['running']:
 				if key == self.keys["down"]:
 					self.rolling = 1
-					self.current = 0
+					self.playerVars['current'] = 0
 					if key == self.keys["right"]:
-						self.xMove = 8
+						self.playerVars['xMove'] = 8
 					elif key == self.keys["left"]:
-						self.xMove = -8
+						self.playerVars['xMove'] = -8
 				elif key == self.keys["up"]:
 					if key == self.keys["right"]:
-						self.xMove = 10
+						self.playerVars['xMove'] = 10
 					elif key == self.keys["left"]:
-						self.xMove = -10
-					self.yMove = -6
+						self.playerVars['xMove'] = -10
+					self.playerVars['yMove'] = -6
 					self.jumpfwd = 1
 					self.inAir = 1
-					self.current = 0
-					#self.running = 0
+					self.playerVars['current'] = 0
+					#self.playerVars['running'] = 0
 					#print "jump fwd"
 
 		if not self.lastkey:
@@ -111,79 +112,79 @@ class Player(pygame.sprite.Sprite):
 					self.crouchup = 1
 					self.crouchdown = 0
 				self.lastkey = 0
-				self.xMove = 0
-				self.running = 0
+				self.playerVars['xMove'] = 0
+				self.playerVars['running'] = 0
 				#self.crouching = 0
-				self.current = 0
+				self.playerVars['current'] = 0
 
 	def update(self):
 		if self.fallingforwards:
-			if self.current == len(self.frames["fallforwards"]) -1:
-				self.current = 0
+			if self.playerVars['current'] == len(self.frames["fallforwards"]) -1:
+				self.playerVars['current'] = 0
 				self.fallingforwards = 0
-				self.xMove = 0
+				self.playerVars['xMove'] = 0
 			else:
-				self.current += 1
-			self.image = self.frames["fallforwards"][self.current]
+				self.playerVars['current'] += 1
+			self.image = self.frames["fallforwards"][self.playerVars['current']]
 		elif self.fallingback:
-			if self.current == len(self.frames["fallback"]) -1:
-				self.current = 0
+			if self.playerVars['current'] == len(self.frames["fallback"]) -1:
+				self.playerVars['current'] = 0
 				self.fallingback = 0
 				self.noKeys = 0
-				#self.xMove = 0
+				#self.playerVars['xMove'] = 0
 			else:
-				self.current += 1
-			self.image = self.frames["fallback"][self.current]
+				self.playerVars['current'] += 1
+			self.image = self.frames["fallback"][self.playerVars['current']]
 		elif self.crouching:
-			self.image = self.frames["crouch"][self.current]
-			if self.current == len(self.frames["crouch"]) -1:
-				self.current = len(self.frames["crouch"]) -1
+			self.image = self.frames["crouch"][self.playerVars['current']]
+			if self.playerVars['current'] == len(self.frames["crouch"]) -1:
+				self.playerVars['current'] = len(self.frames["crouch"]) -1
 			elif self.crouchdown:
-				self.current += 1
+				self.playerVars['current'] += 1
 			if self.crouchup:
 				self.crouchup = 0
-				self.current -= 1
+				self.playerVars['current'] -= 1
 				self.crouching = 0
 		elif self.rolling:
-			self.image = self.frames["roll"][self.current]
-			if self.current == len(self.frames["roll"]) -1:
+			self.image = self.frames["roll"][self.playerVars['current']]
+			if self.playerVars['current'] == len(self.frames["roll"]) -1:
 				self.rolling = 0
 				self.crouching = 1
-				self.current = 0
+				self.playerVars['current'] = 0
 				self.crouchdown = 1
-				self.xMove = 0
+				self.playerVars['xMove'] = 0
 				self.lastkey=self.keys["down"]
 			else:
-				self.current += 1
+				self.playerVars['current'] += 1
 		elif self.jumpfwd:
-			self.image = self.frames["jumpfwd"][self.current]
-			if self.current == len(self.frames["jumpfwd"]) -1:
+			self.image = self.frames["jumpfwd"][self.playerVars['current']]
+			if self.playerVars['current'] == len(self.frames["jumpfwd"]) -1:
 				self.jumpfwd = 0
-				self.current = 0
+				self.playerVars['current'] = 0
 			else:
-				self.current += 1
-		elif self.running:
-			self.image = self.frames["run"][self.current]
-			if self.current == len(self.frames["run"]) -1:
-				self.current = 0
+				self.playerVars['current'] += 1
+		elif self.playerVars['running']:
+			self.image = self.frames["run"][self.playerVars['current']]
+			if self.playerVars['current'] == len(self.frames["run"]) -1:
+				self.playerVars['current'] = 0
 			else:
-				self.current += 1
+				self.playerVars['current'] += 1
 		elif self.inAir:
 			self.image = self.fall
 		else:
 			self.crouchup = 0
 			self.crouchdown = 0
 			self.image = self.stand
-		if self.dir==1:
+		if self.playerVars['dir']==1:
 			self.image = pygame.transform.flip(self.image, 1, 0)
-		#if self.yMove < self.maxVol:
-		#	self.yMove += self.gravity
+		#if self.playerVars['yMove'] < self.maxVol:
+		#	self.playerVars['yMove'] += self.gravity
 		
-		move = self.feetRect.move(0, self.yMove)
+		move = self.feetRect.move(0, self.playerVars['yMove'])
 		
 		if move.collidelist(self.platform) == -1:
-			self.rect.move_ip(0, self.yMove)
-			self.feetRect.move_ip(0, self.yMove)
+			self.rect.move_ip(0, self.playerVars['yMove'])
+			self.feetRect.move_ip(0, self.playerVars['yMove'])
 		else:
 			self.inAir = 0
 			for i in range(self.gravity+1, 0, -1):
@@ -192,21 +193,21 @@ class Player(pygame.sprite.Sprite):
 				if move.collidelist(self.platform) == -1:
 					self.rect.move_ip(0, i)
 					self.feetRect.move_ip(0, i)
-		self.rect.move_ip(self.xMove,0)
-		self.feetRect.move_ip(self.xMove,0)
+		self.rect.move_ip(self.playerVars['xMove'],0)
+		self.feetRect.move_ip(self.playerVars['xMove'],0)
 
 	def collide(self, dir, speed):
 		"""Acts on collitions"""
-		#if self.xMove == -6 or self.xMove == 6 and speed == -6 or speed == 6:
-		#	if self.xMove == -6:
-		#		self.xMove = 6
+		#if self.playerVars['xMove'] == -6 or self.playerVars['xMove'] == 6 and speed == -6 or speed == 6:
+		#	if self.playerVars['xMove'] == -6:
+		#		self.playerVars['xMove'] = 6
 		#	else:
-		#		self.xMove = -6
+		#		self.playerVars['xMove'] = -6
 		#	self.fallingback = 1
-		#	self.running = 0
-		#	self.current = 0
+		#	self.playerVars['running'] = 0
+		#	self.playerVars['current'] = 0
 		#	self.noKeys = 1
-			#self.xMove = 6
+			#self.playerVars['xMove'] = 6
 		#else:
 		#	self.fallingforwards = 0
 			
