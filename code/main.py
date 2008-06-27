@@ -105,7 +105,6 @@ class Main():
 		self.sideRight = pygame.Rect(400, 0, 0, 640)
 		self.sideTop = pygame.Rect(400, 0, 0, 640)
 		self.sideBottom = pygame.Rect(400, 0, 0, 640)
-		print time.clock()
 
 	def mainloop(self):
 		"""The games main loop"""
