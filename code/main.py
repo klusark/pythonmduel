@@ -80,9 +80,7 @@ class Main():
 		self.connect = 0
 		self.bound = 0
 		self.connected = 0
-		self.selected =  -2
 		self.getnewkey = 0
-		self.menuItems = [""]*3#number of main menu items
 		self.keyItems = {}
 		self.quit = 0
 	#players
@@ -105,7 +103,11 @@ class Main():
 		self.sideRight = pygame.Rect(400, 0, 0, 640)
 		self.sideTop = pygame.Rect(400, 0, 0, 640)
 		self.sideBottom = pygame.Rect(400, 0, 0, 640)
-
+		
+	#menu stuffs
+		self.numMenuItmes = 4
+		self.menuItems = [""]*self.numMenuItmes
+		self.selected =  -2 # so none are selected at start
 	def mainloop(self):
 		"""The games main loop"""
 		while 1:
@@ -161,10 +163,11 @@ class Main():
 		"""Pages are 0: shows intro image 1: main menu 2: view fighters 3: set controls 9: displays who is playing when game is starting 10: get game started"""
 		if self.page is 0:
 			self.background.blit(self.introimage, (0, 0))
+			
 		elif self.page is 1:
 			if self.selected == -1:
-				self.selected = 2
-			if self.selected == 3:
+				self.selected = self.numMenuItmes-1
+			if self.selected == self.numMenuItmes:
 				self.selected = 0
 			if not self.drawMenuItem("Begin Game",		0, 50, 9):
 				return
@@ -172,6 +175,9 @@ class Main():
 				return
 			if not self.drawMenuItem("Set Controls",	2, 90, 3):
 				return
+			if not self.drawMenuItem("Exit",			3, 110, 4):
+				return
+				
 		elif self.page is 2:
 			for i in range(len(self.players)):
 				if self.players[i] == self.player1.name:
@@ -212,6 +218,7 @@ class Main():
 			self.background.blit(self.text, (400,140))
 			self.text = self.font.render("FIDS", 0, (255, 255, 255))
 			self.background.blit(self.text, (500,140))
+			
 		elif self.page is 3:
 			self.posinfo={}
 			self.posinfo["p1"]=self.player1
@@ -235,6 +242,7 @@ class Main():
 			self.text = self.font.render(self.player1.name+" vs. "+self.player2.name, 0, (164, 64, 164))
 			self.pos = self.text.get_rect(center=(self.background.get_width()/2,self.background.get_height()/2))
 			self.background.blit(self.text, self.pos)
+			
 		elif self.page is 10:
 			self.playing = 1
 			self.menu = 0
@@ -302,7 +310,7 @@ class Main():
 				if self.page is 1:
 					if event.key == K_DOWN:
 						if self.selected == -2:
-							self.selected = 2
+							self.selected = self.numMenuItmes-1
 						self.selected +=1
 					if event.key == K_UP:
 						if self.selected == -2:
@@ -319,6 +327,8 @@ class Main():
 						elif self.selected == 2:
 							self.page = 3
 							self.background.fill((0, 0, 0))
+						elif self.selected == 3:
+							self.quit = 1
 				if self.page is 3:
 					if self.getnewkey:
 						self.posinfo["p"+self.getnewkey[1]].keys[self.getnewkey[0]] = event.key
