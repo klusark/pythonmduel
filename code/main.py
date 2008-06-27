@@ -66,7 +66,7 @@ class Main():
 				frame = 0
 			self.mallows.append(sprites.MallowAnm(i*(16*2),400-16-30,frame))
 			frame +=1
-		self.bubble1 = sprites.Bubble(50, 50)
+		self.bubble1 = sprites.Bubble(350, 50)
 		#self.bubble2 = sprites.Bubble(60, 50)
 		self.allsprites = pygame.sprite.RenderPlain((self.player1, self.player2, self.platform, self.mallows, self.mallow, self.rope, self.bubble1))
 		self.playerGroup = pygame.sprite.Group()
@@ -115,8 +115,16 @@ class Main():
 			if self.playing:
 				self.inGameEvents()
 				self.allsprites.update()
-				if self.bubble1.rect.collidelist([self.sideLeft, self.sideRight, self.sideBottom, self.sideTop]) is not -1:
-					self.bubble1.angle = (self.bubble1.angle + 90)-180
+				side = self.bubble1.rect.collidelist([self.sideLeft, self.sideRight, self.sideBottom, self.sideTop])
+				if side is not -1:
+					if side is 0:
+						self.bubble1.xMove = -self.bubble1.xMove
+					elif side is 1:
+						self.bubble1.xMove = -self.bubble1.xMove
+					elif side is 2:
+						self.bubble1.yMove = -self.bubble1.yMove
+					elif side is 3:
+						self.bubble1.yMove = -self.bubble1.yMove
 				#if len(PixelPerfect.spritecollide_pp(self.player1, self.playerGroup, 0)) == 2:
 				#	self.player1.collide(self.player2.dir, self.player2.xMove)
 				#	self.player2.collide(self.player1.dir, self.player1.xMove)
