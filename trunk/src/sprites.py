@@ -29,7 +29,7 @@ class MallowAnm(pygame.sprite.Sprite):
 		self.frames = {}
 		self.loadAnm("mallow", 4)
 		self.current = frame
-	
+
 	def loadAnm(self,name,num):
 		self.frames[name]=[]
 		for i in range(num):
@@ -45,10 +45,10 @@ class MallowAnm(pygame.sprite.Sprite):
 
 class Bubble(pygame.sprite.Sprite):
 	"""MallowAnm Sprite"""
-	def __init__(self,x,y):
+	def __init__(self):
 		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
 		self.rect = pygame.Rect(0, 0, 16, 16)
-		self.rect.move_ip(x, y)
+		
 		self.frames = {}
 		self.loadAnm("bubble", 3)
 		self.current = 0
@@ -67,7 +67,8 @@ class Bubble(pygame.sprite.Sprite):
 		self.currentWeapon = self.weapons.keys()[randint(0,9)]
 		self.xMove = randint(1,5)
 		self.yMove = randint(1,5)
-		
+		self.locs = [(50,50),(100,100),(200,200)]
+		self.rect.move_ip(self.locs[randint(0,2)])
 	def loadAnm(self,name,num):
 		self.frames[name]=[]
 		for i in range(num):
