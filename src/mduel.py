@@ -11,7 +11,7 @@ try:
 	import psyco
 	psyco.full()
 except ImportError:
-	pass
+	print "Could not import psyco."
 main = main.Main()
 print time.clock()
 try:

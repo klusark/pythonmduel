@@ -66,9 +66,12 @@ class Main():
 				frame = 0
 			self.mallows.append(sprites.MallowAnm(i*(16*2),400-16-30,frame))
 			frame +=1
-		self.bubble1 = sprites.Bubble(350, 50)
+		self.bubbles = []
+		for i in range(3):
+			self.bubbles.append(sprites.Bubble())
 		#self.bubble2 = sprites.Bubble(60, 50)
-		self.allsprites = pygame.sprite.RenderPlain((self.player1, self.player2, self.platform, self.mallows, self.mallow, self.rope, self.bubble1))
+		
+		self.allsprites = pygame.sprite.OrderedUpdates((self.player1, self.player2, self.platform, self.mallows, self.mallow, self.rope, self.bubbles))
 		self.playerGroup = pygame.sprite.Group()
 		self.playerGroup.add(self.player1, self.player2)
 		
@@ -99,10 +102,10 @@ class Main():
 		self.settings.readfp(open('settings'))
 		self.port = self.settings.getint('net','port')
 
-		self.sideLeft = pygame.Rect(0, 0, 0, 400)
-		self.sideRight = pygame.Rect(640, 0, 0, 400)
-		self.sideTop = pygame.Rect(0, 0, 640, 0)
-		self.sideBottom = pygame.Rect(0, 400, 640, 0)
+		self.sideLeft = pygame.Rect(0, -5, 0, 410)
+		self.sideRight = pygame.Rect(635, -5, 0, 410)
+		self.sideTop = pygame.Rect(-5, -3, 650, 0)
+		self.sideBottom = pygame.Rect(-5, 340, 645, 0)
 		
 	#menu stuffs
 		self.numMenuItmes = 4
@@ -115,20 +118,7 @@ class Main():
 			if self.playing:
 				self.inGameEvents()
 				self.allsprites.update()
-				side = self.bubble1.rect.collidelist([self.sideLeft, self.sideRight, self.sideBottom, self.sideTop])
-				if side is not -1:
-					if side is 0:
-						self.bubble1.xMove = -self.bubble1.xMove
-					elif side is 1:
-						self.bubble1.xMove = -self.bubble1.xMove
-					elif side is 2:
-						self.bubble1.yMove = -self.bubble1.yMove
-					elif side is 3:
-						self.bubble1.yMove = -self.bubble1.yMove
-				#if len(PixelPerfect.spritecollide_pp(self.player1, self.playerGroup, 0)) == 2:
-				#	self.player1.collide(self.player2.dir, self.player2.xMove)
-				#	self.player2.collide(self.player1.dir, self.player1.xMove)
-				#Draw Everything
+				self.colisions()
 				self.screen.blit(self.background, (0, 0))
 				self.allsprites.draw(self.screen)
 				pygame.display.flip()
@@ -168,7 +158,23 @@ class Main():
 					self.connect = 0
 			if self.quit:
 				return
-
+	
+	def colisions(self):
+		for bubble in self.bubbles:
+			side = bubble.rect.collidelist([self.sideLeft, self.sideRight, self.sideBottom, self.sideTop])
+			if side is not -1:
+				if side is 0:
+					bubble.xMove = -bubble.xMove
+				elif side is 1:
+					bubble.xMove = -bubble.xMove
+				elif side is 2:
+					bubble.yMove = -bubble.yMove
+				elif side is 3:
+					bubble.yMove = -bubble.yMove
+		#if len(PixelPerfect.spritecollide_pp(self.player1, self.playerGroup, 0)) == 2:
+		#	self.player1.collide(self.player2.dir, self.player2.xMove)
+		#	self.player2.collide(self.player1.dir, self.player1.xMove)
+		#Draw Everything
 	def drawPage(self):
 		"""Pages are 0: shows intro image 1: main menu 2: view fighters 3: set controls 9: displays who is playing when game is starting 10: get game started"""
 		if self.page is 0:
@@ -299,6 +305,11 @@ class Main():
 					self.bind = 1
 				if event.key == K_c:
 					self.connect = 1
+				if event.key == K_ESCAPE:
+					self.playing = 0
+					self.menu = 1
+					self.page = 1
+					self.background.fill((0, 0, 0))
 			elif event.type == KEYUP:
 				if event.key in self.player1.keys.values():
 					self.player1.MoveKeyUp(event.key)
