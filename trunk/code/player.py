@@ -18,7 +18,7 @@ class Player(pygame.sprite.Sprite):
 		self.playerVars['yMove'] = 0
 		self.playerVars['current'] = 0
 		self.playerVars['running'] = 0
-		self.playerVars['dir'] = 0
+		self.playerVars['dir'] = dir
 		self.lastkey = 0
 		self.crouching = 0
 		self.crouchdown = 0

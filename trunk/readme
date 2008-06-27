@@ -1,5 +1,6 @@
 Make sure python, pygame and numeric are installed.
-Run: python mduel.py
+Psyco is not needed but will make mduel faster.
+Run: python start.py
 
 To make binary distribution use setup.py
 py2exe is needed. 
