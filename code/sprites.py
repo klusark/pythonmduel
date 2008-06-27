@@ -65,7 +65,9 @@ class Bubble(pygame.sprite.Sprite):
 		self.weapons["10000v"] = main.loadImage('10000v.png', 0, -1)
 		self.weapons["mine"] = main.loadImage('mine.png', 0, -1)
 		self.currentWeapon = self.weapons.keys()[randint(0,9)]
-		self.vector = (40,10)
+		#self.vector = (40,10)
+		self.angle = 40
+		self.speed = 10
 		
 	def loadAnm(self,name,num):
 		self.frames[name]=[]
@@ -81,13 +83,14 @@ class Bubble(pygame.sprite.Sprite):
 		self.image = self.frames["bubble"][self.current]
 		self.image.blit(self.weapons[self.currentWeapon], (0, 0))
 		
-		newpos = self.calcnewpos(self.rect,self.vector)
-		self.rect = newpos
+		self.rect = self.calcnewpos(self.rect, self.angle, self.speed)
 
-	def calcnewpos(self,rect,vector):
-		(angle,z) = vector
-		(dx,dy) = (z*math.cos(angle),z*math.sin(angle))
-		return rect.move(dx,dy)
+
+	def calcnewpos(self, rect, angle, speed):
+		#(angle,z) = vector
+		(dx,dy) = (speed*math.cos(angle), speed*math.sin(angle))
+		return rect.move(dx, dy)
+
 class Rope(pygame.sprite.Sprite):
 	"""The rope"""
 	def __init__(self,x,y,len):
