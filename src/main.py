@@ -68,8 +68,7 @@ class Main():
 			frame +=1
 		self.bubbles = []
 		for i in range(3):
-			self.bubbles.append(sprites.Bubble())
-		#self.bubble2 = sprites.Bubble(60, 50)
+			self.bubbles.append(sprites.Bubble(i))
 		
 		self.allsprites = pygame.sprite.OrderedUpdates((self.player1, self.player2, self.platform, self.mallows, self.mallow, self.rope, self.bubbles))
 		self.playerGroup = pygame.sprite.Group()
