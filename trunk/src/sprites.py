@@ -44,14 +44,14 @@ class MallowAnm(pygame.sprite.Sprite):
 		self.image = self.frames["mallow"][self.current]
 
 class Bubble(pygame.sprite.Sprite):
-	"""MallowAnm Sprite"""
-	def __init__(self):
+	"""bubble Sprite. also used for startpoof"""
+	def __init__(self, num):
 		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
 		self.rect = pygame.Rect(0, 0, 16, 16)
-		
 		self.frames = {}
 		self.loadAnm("bubble", 3)
 		self.loadAnm("bubblepop", 2)
+		self.loadAnm("startpoof", 3)
 		self.current = 0
 		#load weapon images
 		self.weapons = {}
@@ -65,11 +65,21 @@ class Bubble(pygame.sprite.Sprite):
 		self.weapons["invis"] = main.loadImage('invis.png', 0, -1)
 		self.weapons["10000v"] = main.loadImage('10000v.png', 0, -1)
 		self.weapons["mine"] = main.loadImage('mine.png', 0, -1)
+		self.weapons["tele"] = main.loadImage('blank.png', 0, -1)
+		self.blank = self.weapons["tele"]
 		self.currentWeapon = self.weapons.keys()[randint(0,9)]
 		self.xMove = randint(1,5)
 		self.yMove = randint(1,5)
 		self.locs = [(50,50),(100,100),(200,200)]
-		self.rect.move_ip(self.locs[randint(0,2)])
+		self.poofing = 0
+		self.hide = 0
+		if num is 0:
+			self.rect.move_ip(51, 288)
+			self.poofing = 1
+		elif num is 1:
+			self.rect.move_ip(531, 288)
+			self.poofing = 1
+		#self.rect.move_ip(self.locs[randint(0,2)])
 	def loadAnm(self,name,num):
 		self.frames[name]=[]
 		for i in range(num):
@@ -77,14 +87,35 @@ class Bubble(pygame.sprite.Sprite):
 			self.frames[name].append(image)
 
 	def update(self):
-		if self.current == len(self.frames["bubble"])-1:
-			self.current = 0
+		if self.poofing:
+			if self.current == len(self.frames["startpoof"]):
+				self.current = 0
+				self.poofing = 0
+				self.image = self.blank
+				self.getNewSpawn()
+				self.hide = 1
+				
+			else:
+				self.image = self.frames["startpoof"][self.current]
+				self.current += 1
+			
+		elif self.hide:
+			self.image = self.blank
 		else:
-			self.current += 1
-		self.image = self.frames["bubble"][self.current]
-		self.image.blit(self.weapons[self.currentWeapon], (0, 0))
+			if self.current == len(self.frames["bubble"])-1:
+				self.current = 0
+			else:
+				self.current += 1
+			self.image = self.frames["bubble"][self.current]
+			self.image.blit(self.weapons[self.currentWeapon], (0, 0))
+			
+			self.rect.move_ip(self.xMove, self.yMove)
 		
-		self.rect.move_ip(self.xMove, self.yMove)
+	
+	def getNewSpawn(self):
+		self.rect[0] = 0
+		self.rect[1] = 0
+		self.rect.move_ip(self.locs[randint(0,2)])
 
 class Rope(pygame.sprite.Sprite):
 	"""The rope"""
