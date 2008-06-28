@@ -5,6 +5,6 @@ try:
 	import py2exe
 except ImportError:
 	exit("Could not import py2exe.")
-argv[1:] = ["py2exe","-O2"] + argv[1:]
-setup(windows=['mduel.py'])
+argv[1:] = ["py2exe","-OO"] + argv[1:]
+setup(windows=['start.py'])
 copytree("data", "dist/data")
