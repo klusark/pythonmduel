@@ -51,6 +51,7 @@ class Bubble(pygame.sprite.Sprite):
 		
 		self.frames = {}
 		self.loadAnm("bubble", 3)
+		self.loadAnm("bubblepop", 2)
 		self.current = 0
 		#load weapon images
 		self.weapons = {}

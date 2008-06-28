@@ -171,6 +171,9 @@ class Main():
 					bubble.yMove = -bubble.yMove
 				elif side is 3:
 					bubble.yMove = -bubble.yMove
+			player = bubble.rect.collidelist([self.player1, self.player2])
+			if player is not -1:
+				print "powerup"
 		#if len(PixelPerfect.spritecollide_pp(self.player1, self.playerGroup, 0)) == 2:
 		#	self.player1.collide(self.player2.dir, self.player2.xMove)
 		#	self.player2.collide(self.player1.dir, self.player1.xMove)
