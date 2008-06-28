@@ -50,9 +50,9 @@ class Main():
 		self.platfromRects = []
 		for i in self.platform:
 			self.platfromRects.append(i.rectTop)
-		self.player1 = player.Player(39, 288, self.platfromRects)
+		self.player1 = player.Player(51, 288, self.platfromRects)
 		self.player1.setKeys(K_d, K_a, K_s, K_w)
-		self.player2 = player.Player(457, 288, self.platfromRects, 1)
+		self.player2 = player.Player(531, 288, self.platfromRects, 1)
 		self.player2.setKeys()
 		self.rope = self.generateRopes()
 		self.mallow = []
@@ -268,14 +268,14 @@ class Main():
 		"""platform generator"""
 		platform = []
 		for i in range(51):
-			if (i<3):
-				platform.append(sprites.Platform((i*16+24)*2, (192-32+8)*2))
-			elif (i<6):
-				platform.append(sprites.Platform((256-24-((i-3)*16))*2, (192-32+8)*2))
+			if (i<4):
+				platform.append(sprites.Platform((i*16+24)*2, (168)*2))
+			elif (i<8):
+				platform.append(sprites.Platform((304-24-((i-4)*16))*2, (168)*2))
 			elif (i>47):
-				platform.append(sprites.Platform((256-16-8-((i-47)*16))*2, (192-32+8+4*-32)*2))
+				platform.append(sprites.Platform((256-16-8-((i-47)*16))*2, (168+4*-32)*2))
 			elif (i>44):
-				platform.append(sprites.Platform(((i-45)*16+16+16+8)*2, (192-32+8+4*-32)*2))
+				platform.append(sprites.Platform(((i-45)*16+16+16+8)*2, (168+4*-32)*2))
 			else:
 				j = i-6;
 				col = j%13;
