@@ -21,7 +21,7 @@ class Mallow(pygame.sprite.Sprite):
 		self.rect.move_ip(x, y)
 
 class MallowAnm(pygame.sprite.Sprite):
-	"""MallowAnm Sprite"""
+	"""Mallow animation Sprite"""
 	def __init__(self,x,y,frame):
 		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
 		self.rect = pygame.Rect(0, 0, 16, 8)
@@ -53,6 +53,7 @@ class Bubble(pygame.sprite.Sprite):
 		self.loadAnm("bubblepop", 2)
 		self.loadAnm("startpoof", 3)
 		self.current = 0
+		self.blank = main.loadImage('blank.png', 0, -1)
 		#load weapon images
 		self.weapons = {}
 		self.weapons["gun"] = main.loadImage('gun.png', 0, -1)
@@ -65,8 +66,8 @@ class Bubble(pygame.sprite.Sprite):
 		self.weapons["invis"] = main.loadImage('invis.png', 0, -1)
 		self.weapons["10000v"] = main.loadImage('10000v.png', 0, -1)
 		self.weapons["mine"] = main.loadImage('mine.png', 0, -1)
-		self.weapons["tele"] = main.loadImage('blank.png', 0, -1)
-		self.blank = self.weapons["tele"]
+		self.weapons["tele"] = self.blank
+		
 		self.currentWeapon = self.weapons.keys()[randint(0,9)]
 		self.xMove = randint(1,5)
 		self.yMove = randint(1,5)
@@ -80,6 +81,7 @@ class Bubble(pygame.sprite.Sprite):
 			self.rect.move_ip(531, 288)
 			self.poofing = 1
 		#self.rect.move_ip(self.locs[randint(0,2)])
+	
 	def loadAnm(self,name,num):
 		self.frames[name]=[]
 		for i in range(num):
