@@ -37,42 +37,13 @@ class Main():
 	#Create The Backgound
 		self.background = pygame.Surface(self.screen.get_size())
 		self.background = self.background.convert()
-		
+
 	#Font
 		pygame.font.init()
 		self.font = pygame.font.Font("data/marshmallowDuel.ttf", 28)
 		self.font2 = pygame.font.Font("data/marshmallowDuel.ttf", 20)
 	#Prepare Game Objects
 		self.clock = pygame.time.Clock()
-		self.platform = self.generateBricks()
-		self.groundGroup = pygame.sprite.Group()
-		self.groundGroup.add(self.platform)
-		self.platfromRects = []
-		for i in self.platform:
-			self.platfromRects.append(i.rectTop)
-		self.player1 = player.Player(51, 288, self.platfromRects)
-		self.player1.setKeys(K_d, K_a, K_s, K_w)
-		self.player2 = player.Player(531, 288, self.platfromRects, 1)
-		self.player2.setKeys()
-		self.rope = self.generateRopes()
-		self.mallow = []
-		for i in range(22):
-			self.mallow.append(sprites.Mallow(i*(15*2),400-(15*2)))
-		#mallows = MallowAnm()
-		self.mallows = []
-		frame = 0
-		for i in range(20):
-			if frame == 4:
-				frame = 0
-			self.mallows.append(sprites.MallowAnm(i*(16*2),400-16-30,frame))
-			frame +=1
-		self.bubbles = []
-		for i in range(3):
-			self.bubbles.append(sprites.Bubble(i))
-		
-		self.allsprites = pygame.sprite.OrderedUpdates((self.player1, self.player2, self.platform, self.mallows, self.mallow, self.rope, self.bubbles))
-		self.playerGroup = pygame.sprite.Group()
-		self.playerGroup.add(self.player1, self.player2)
 		
 	#Odds and ends
 		self.menu = 1
@@ -93,9 +64,8 @@ class Main():
 		for i in range(6):
 			self.players.append("".join(findall("[a-zA-Z]+", self.playerlist[i])))
 			self.playerinfo.append(findall("[-0-9]+", self.playerlist[i]))
-		self.player1.name = self.players[0]
-		self.player2.name = self.players[1]
-		
+		self.player1Name = self.players[0]
+		self.player2Name = self.players[1]
 	#settings
 		self.settings = RawConfigParser()
 		self.settings.readfp(open('settings'))
@@ -107,14 +77,13 @@ class Main():
 		self.sideBottom = pygame.Rect(-5, 340, 645, 0)
 		
 	#menu stuffs
-		self.numMenuItmes = 4
-		self.menuItems = [""]*self.numMenuItmes
-		self.selected =  -2 # so none are selected at start
+		self.__initMenu__()
+		
 	def mainloop(self):
 		"""The games main loop"""
 		while 1:
-			self.clock.tick(10)
 			if self.playing:
+				self.clock.tick(10)
 				self.inGameEvents()
 				self.allsprites.update()
 				self.colisions()
@@ -122,6 +91,7 @@ class Main():
 				self.allsprites.draw(self.screen)
 				pygame.display.flip()
 			if self.menu:
+				self.clock.tick(100)
 				self.inMenuEvents()
 				self.drawPage()
 				self.screen.blit(self.background, (0, 0))
@@ -157,7 +127,47 @@ class Main():
 					self.connect = 0
 			if self.quit:
 				return
-	
+	def __initGame__(self):
+		self.platform = self.generateBricks()
+		self.groundGroup = pygame.sprite.Group()
+		self.groundGroup.add(self.platform)
+		self.platfromRects = []
+		for i in self.platform:
+			self.platfromRects.append(i.rectTop)
+		
+		self.player1 = player.Player(51, 288, self.platfromRects)
+		self.player1.setKeys(K_d, K_a, K_s, K_w)
+		self.player2 = player.Player(531, 288, self.platfromRects, 1)
+		self.player2.setKeys()
+		
+		self.rope = self.generateRopes()
+
+		self.mallow = []
+		for i in range(22):
+			self.mallow.append(sprites.Mallow(i*(15*2),400-(15*2)))
+		#mallows = MallowAnm()
+		self.mallows = []
+		frame = 0
+		for i in range(20):
+			if frame == 4:
+				frame = 0
+			self.mallows.append(sprites.MallowAnm(i*(16*2),400-16-30,frame))
+			frame +=1
+		self.bubbles = []
+		for i in range(3):
+			self.bubbles.append(sprites.Bubble(i))
+		
+		self.allsprites = pygame.sprite.OrderedUpdates((self.player1, self.player2, self.platform, self.mallows, self.mallow, self.rope, self.bubbles))
+		self.playerGroup = pygame.sprite.Group()
+		self.playerGroup.add(self.player1, self.player2)
+		self.player1.name = self.player1Name
+		self.player2.name = self.player2Name
+		
+	def __initMenu__(self):
+		self.numMenuItmes = 5
+		self.menuItems = [""]*self.numMenuItmes
+		self.selected =  -2 # so none are selected at start
+		
 	def colisions(self):
 		for bubble in self.bubbles:
 			side = bubble.rect.collidelist([self.sideLeft, self.sideRight, self.sideBottom, self.sideTop])
@@ -171,14 +181,24 @@ class Main():
 				elif side is 3:
 					bubble.yMove = -bubble.yMove
 			player = bubble.rect.collidelist([self.player1, self.player2])
-			if player is not -1:
+			if player is not -1 and bubble.image in bubble.frames["bubble"]:
 				print "powerup"
 		#if len(PixelPerfect.spritecollide_pp(self.player1, self.playerGroup, 0)) == 2:
 		#	self.player1.collide(self.player2.dir, self.player2.xMove)
 		#	self.player2.collide(self.player1.dir, self.player1.xMove)
 		#Draw Everything
 	def drawPage(self):
-		"""Pages are 0: shows intro image 1: main menu 2: view fighters 3: set controls 9: displays who is playing when game is starting 10: get game started"""
+		"""
+		Pages are 
+		0: shows intro image 
+		1: main menu 
+		2: view fighters 
+		3: set controls 
+		4: options
+		8: quits the game 
+		9: displays who is playing when game is starting 
+		10: starts game
+		"""
 		if self.page is 0:
 			self.background.blit(self.introimage, (0, 0))
 			
@@ -193,14 +213,16 @@ class Main():
 				return
 			if not self.drawMenuItem("Set Controls",	2, 90, 3):
 				return
-			if not self.drawMenuItem("Exit",			3, 110, 4):
+			if not self.drawMenuItem("Options",			3, 110, 4):
+				return
+			if not self.drawMenuItem("Exit",			4, 130, 8):
 				return
 				
 		elif self.page is 2:
 			for i in range(len(self.players)):
-				if self.players[i] == self.player1.name:
+				if self.players[i] == self.player1Name:
 					self.colour = (176, 0, 0)
-				elif self.players[i] == self.player2.name:
+				elif self.players[i] == self.player2Name:
 					self.colour = (0, 48, 192)
 				else:
 					self.colour = (164, 64, 164)
@@ -255,16 +277,20 @@ class Main():
 				self.setNewKey("Left", "left", stri, 75)
 				self.setNewKey("Crouch", "down", stri, 100)
 				self.setNewKey("Jump", "up", stri, 125)
-
+		elif self.page is 4:
+			pass
+		elif self.page is 8:
+			self.quit = 1
 		elif self.page is 9:
-			self.text = self.font.render(self.player1.name+" vs. "+self.player2.name, 0, (164, 64, 164))
-			self.pos = self.text.get_rect(center=(self.background.get_width()/2,self.background.get_height()/2))
+			self.text = self.font.render(self.player1Name + " vs. " + self.player2Name, 0, (164, 64, 164))
+			self.pos = self.text.get_rect(center = (self.background.get_width()/2, self.background.get_height()/2))
 			self.background.blit(self.text, self.pos)
 			
 		elif self.page is 10:
 			self.playing = 1
 			self.menu = 0
 			self.background.fill((0, 0, 0))
+			self.__initGame__()
 
 	def generateBricks(self):
 		"""platform generator"""
@@ -351,6 +377,9 @@ class Main():
 							self.page = 3
 							self.background.fill((0, 0, 0))
 						elif self.selected == 3:
+							self.page = 4
+							self.background.fill((0, 0, 0))
+						elif self.selected == 4:
 							self.quit = 1
 				if self.page is 3:
 					if self.getnewkey:
