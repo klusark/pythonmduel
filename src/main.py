@@ -195,6 +195,7 @@ class Main():
 		2: view fighters 
 		3: set controls 
 		4: options
+		5: Net options
 		8: quits the game 
 		9: displays who is playing when game is starting 
 		10: starts game
@@ -246,18 +247,13 @@ class Main():
 				self.text = self.font2.render(self.playerinfo[i][4], 0, self.colour)
 				self.background.blit(self.text, (500, y))
 				
-			self.text = self.font.render("Name", 0, (255, 255, 255))
-			self.background.blit(self.text, (0,140))
-			self.text = self.font.render("Rank", 0, (255, 255, 255))
-			self.background.blit(self.text, (150,140))
-			self.text = self.font.render("W", 0, (255, 255, 255))
-			self.background.blit(self.text, (250,140))
-			self.text = self.font.render("L", 0, (255, 255, 255))
-			self.background.blit(self.text, (300,140))
-			self.text = self.font.render("S", 0, (255, 255, 255))
-			self.background.blit(self.text, (400,140))
-			self.text = self.font.render("FIDS", 0, (255, 255, 255))
-			self.background.blit(self.text, (500,140))
+			self.drawText("Name", self.font, 0, 140, (255, 255, 255))
+			self.drawText("Rank", self.font, 150, 140, (255, 255, 255))
+			self.drawText("W", self.font, 250, 140, (255, 255, 255))
+			self.drawText("L", self.font, 300, 140, (255, 255, 255))
+			self.drawText("S", self.font, 400, 140, (255, 255, 255))
+			self.drawText("FIDS", self.font, 500, 140, (255, 255, 255))
+
 			
 		elif self.page is 3:
 			self.posinfo={}
@@ -278,6 +274,9 @@ class Main():
 				self.setNewKey("Crouch", "down", stri, 100)
 				self.setNewKey("Jump", "up", stri, 125)
 		elif self.page is 4:
+			if not self.drawMenuItem("Net",	0, 50, 5):
+				return
+		elif self.page is 5:
 			pass
 		elif self.page is 8:
 			self.quit = 1
@@ -291,7 +290,11 @@ class Main():
 			self.menu = 0
 			self.background.fill((0, 0, 0))
 			self.__initGame__()
-
+			
+	def drawText(self, text, font, x, y, colour):
+		text = font.render(text, 0, colour)
+		self.background.blit(text, (x, y))
+		
 	def generateBricks(self):
 		"""platform generator"""
 		platform = []
