@@ -157,7 +157,7 @@ class Main():
 		for i in range(3):
 			self.bubbles.append(sprites.Bubble(i))
 		
-		self.allsprites = pygame.sprite.OrderedUpdates((self.player1, self.player2, self.platform, self.mallows, self.mallow, self.rope, self.bubbles))
+		self.allsprites = pygame.sprite.OrderedUpdates((self.platform, self.mallows, self.mallow, self.rope, self.player1, self.player2, self.bubbles))
 		self.playerGroup = pygame.sprite.Group()
 		self.playerGroup.add(self.player1, self.player2)
 		self.player1.name = self.player1Name
@@ -298,28 +298,32 @@ class Main():
 	def generateBricks(self):
 		"""platform generator"""
 		platform = []
-		for i in range(51):
-			if (i<4):
-				platform.append(sprites.Platform((i*16+24)*2, (168)*2))
-			elif (i<8):
-				platform.append(sprites.Platform((304-24-((i-4)*16))*2, (168)*2))
-			elif (i>47):
+		for i in range(4): # bottom left platforms
+			platform.append(sprites.Platform((i*16+24)*2, (168)*2))
+		for i in range(4): # bottom right platforms
+			platform.append(sprites.Platform((304-24-(i*16))*2, (168)*2))
+		for i in range(4): # top left
+			platform.append(sprites.Platform(97+i*32, 81))
+		for i in range(4): # top right
+			platform.append(sprites.Platform(417+i*32, 81))
+		"""for i in range(50):
+			if (i>48):
 				platform.append(sprites.Platform((256-16-8-((i-47)*16))*2, (168+4*-32)*2))
 			elif (i>44):
-				platform.append(sprites.Platform(((i-45)*16+16+16+8)*2, (168+4*-32)*2))
+				platform.append(sprites.Platform(((i-45)*16+40)*2, (168+4*-32)*2))
 			else:
 				j = i-6;
 				col = j%13;
 				row = j/13;
 				if (randint(0,10) < 7):
-					platform.append(sprites.Platform(((col+1)*16+16)*2, (192-32+8+((row+1)*-32))*2))
+					platform.append(sprites.Platform(((col+1)*16+16)*2, (192-32+8+((row+1)*-32))*2))"""
 		return platform
 
 	def generateRopes(self):
 		"""Rope generator"""
 		rope = []
-		rope.append(sprites.Rope(56*2, 3*2, 9*2))
-		rope.append(sprites.Rope((256-56)*2, 3*2, 9*2))
+		rope.append(sprites.Rope(159, 39, 6))
+		rope.append(sprites.Rope(479, 39, 6))
 		return rope
 
 	def inGameEvents(self):
