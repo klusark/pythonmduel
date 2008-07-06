@@ -22,7 +22,7 @@ class Mallow(pygame.sprite.Sprite):
 
 class MallowAnm(pygame.sprite.Sprite):
 	"""Mallow animation Sprite"""
-	def __init__(self,x,y,frame):
+	def __init__(self, x, y, frame):
 		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
 		self.rect = pygame.Rect(0, 0, 16, 8)
 		self.rect.move_ip(x, y)
@@ -68,10 +68,10 @@ class Bubble(pygame.sprite.Sprite):
 		self.weapons["mine"] = main.loadImage('mine.png', 0, -1)
 		self.weapons["tele"] = self.blank
 		
-		self.currentWeapon = self.weapons.keys()[randint(0,9)]
+		self.currentWeapon = self.weapons.keys()[randint(0, 9)]
 		self.xMove = randint(1,5)
 		self.yMove = randint(1,5)
-		self.locs = [(50,50),(100,100),(200,200)]
+		self.locs = [(50, 50),(100, 100),(200, 200)]
 		self.poofing = 0
 		self.hide = 0
 		if num is 0:
@@ -82,7 +82,7 @@ class Bubble(pygame.sprite.Sprite):
 			self.poofing = 1
 		#self.rect.move_ip(self.locs[randint(0,2)])
 	
-	def loadAnm(self,name,num):
+	def loadAnm(self, name, num):
 		self.frames[name]=[]
 		for i in range(num):
 			image = main.loadImage(name+str(i)+".png", 0, -1)
@@ -121,8 +121,8 @@ class Bubble(pygame.sprite.Sprite):
 
 class Rope(pygame.sprite.Sprite):
 	"""The rope"""
-	def __init__(self,x,y,len):
+	def __init__(self, x, y, len):
 		pygame.sprite.Sprite.__init__(self)
 		self.image, self.rect = main.loadImage('rope.png', 1)
 		self.rect.move_ip(x, y)
-		self.image = pygame.transform.scale(self.image,(1,16*len))
+		self.image = pygame.transform.scale(self.image, (2, 50 * len))
