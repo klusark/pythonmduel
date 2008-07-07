@@ -5,8 +5,6 @@ Mduel
 #get load time stuff
 import time
 time.clock()
-#Import Modules
-import main
 try:
 	import psyco
 	psyco.full()
@@ -16,6 +14,7 @@ try:
 	import pygame
 except ImportError:
 	exit("Could not import pygame.\nThis game requires pygame. Get it at pygame.org")
+import main
 main = main.Main()
 print time.clock()
 try:
