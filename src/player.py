@@ -31,6 +31,7 @@ class Player(pygame.sprite.Sprite):
 		self.inAir = 0
 		self.jumpfwd = 0
 		self.noKeys = 0
+		self.currentWeapon = None
 		self.name = "Unset"
 		self.hitmask = pygame.surfarray.array_colorkey(self.image)
 		self.image.unlock()

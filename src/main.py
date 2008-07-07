@@ -182,7 +182,11 @@ class Main():
 					bubble.yMove = -bubble.yMove
 			player = bubble.rect.collidelist([self.player1, self.player2])
 			if player is not -1 and bubble.image in bubble.frames["bubble"]:
-				print "powerup"
+				bubble.popping = 1
+				if player is 0:
+					self.player1.currentWeapon = bubble.currentWeapon
+				elif player is 1:
+					self.player2.currentWeapon = bubble.currentWeapon
 		#if len(PixelPerfect.spritecollide_pp(self.player1, self.playerGroup, 0)) == 2:
 		#	self.player1.collide(self.player2.dir, self.player2.xMove)
 		#	self.player2.collide(self.player1.dir, self.player1.xMove)
