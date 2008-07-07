@@ -67,12 +67,13 @@ class Bubble(pygame.sprite.Sprite):
 		self.weapons["10000v"] = main.loadImage('10000v.png', 0, -1)
 		self.weapons["mine"] = main.loadImage('mine.png', 0, -1)
 		self.weapons["tele"] = self.blank
-		
-		self.currentWeapon = self.weapons.keys()[randint(0, 9)]
+		self.powerup = randint(0, 9)
+		self.currentWeapon = self.weapons.keys()[self.powerup]
 		self.xMove = randint(1,5)
 		self.yMove = randint(1,5)
 		self.locs = [(50, 50),(100, 100),(200, 200)]
 		self.poofing = 0
+		self.popping = 0
 		self.hide = 0
 		if num is 0:
 			self.rect.move_ip(51, 288)
@@ -100,9 +101,19 @@ class Bubble(pygame.sprite.Sprite):
 			else:
 				self.image = self.frames["startpoof"][self.current]
 				self.current += 1
-			
+		elif self.popping:
+			if self.current == len(self.frames["bubblepop"]):
+				self.current = 0
+				self.popping = 0
+				self.image = self.blank
+				self.getNewSpawn()
+				self.hide = 1
+			else:
+				self.image = self.frames["bubblepop"][self.current]
+				self.current += 1
 		elif self.hide:
 			self.image = self.blank
+		
 		else:
 			if self.current == len(self.frames["bubble"])-1:
 				self.current = 0
