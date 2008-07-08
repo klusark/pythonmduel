@@ -40,7 +40,7 @@ class Player(pygame.sprite.Sprite):
 	def loadAnm(self,name,num):
 		self.frames[name]=[]
 		for i in range(num):
-			image = main.loadImage(name+str(i)+".png", 0, -1)
+			image = main.loadImage(name+str(i)+".png", 0, -1, "player")
 			self.frames[name].append(image)
 			
 	def loadImages(self):
@@ -51,8 +51,8 @@ class Player(pygame.sprite.Sprite):
 		self.loadAnm("fallback", 2)
 		self.loadAnm("crouch", 2)
 		self.loadAnm("roll", 4)
-		self.fall = main.loadImage('fall.png', 0, -1)
-		self.stand, self.rect = main.loadImage('stand.png', 1, -1)
+		self.fall = main.loadImage('fall.png', 0, -1, "player")
+		self.stand, self.rect = main.loadImage('stand.png', 1, -1, "player")
 		
 	def setKeys(self, right = K_RIGHT, left = K_LEFT, down = K_DOWN, up = K_UP):
 		"""setKeys(right key, left key, crouch key)

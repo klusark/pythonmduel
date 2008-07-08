@@ -7,8 +7,11 @@ from pygame.locals import *
 from zlib import compress, decompress
 from zlib import error as zlibError
 import sprites, player
-def loadImage(name, rect, colorkey=None):
-	fullname = path.join('data', name)
+def loadImage(name, rect, colorkey = None, folder = None):
+	if folder:
+		fullname = path.join('data/'+folder, name)
+	else:
+		fullname = path.join('data', name)
 	try:
 		image = pygame.image.load(fullname)
 	except pygame.error, message:
