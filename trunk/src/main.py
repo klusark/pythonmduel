@@ -7,11 +7,10 @@ from pygame.locals import *
 from zlib import compress, decompress
 from zlib import error as zlibError
 import sprites, player
-def loadImage(name, rect, colorkey = None, folder = None):
-	if folder:
-		fullname = path.join('data/'+folder, name)
-	else:
-		fullname = path.join('data', name)
+theme = "main"
+def loadImage(name, rect, colorkey = None, folder = ""):
+	global theme
+	fullname = path.join('data', theme, folder, name)
 	try:
 		image = pygame.image.load(fullname)
 	except pygame.error, message:
@@ -19,11 +18,11 @@ def loadImage(name, rect, colorkey = None, folder = None):
 		raise SystemExit, message
 	image = image.convert()
 	image = pygame.transform.scale(image,(image.get_width()*2,image.get_height()*2))
-	if colorkey is not None:
+	if colorkey:
 		if colorkey is -1:
 			colorkey = image.get_at((0,0))
 		image.set_colorkey(colorkey, RLEACCEL)
-	if rect == 0:
+	if rect is 0:
 		return image
 	else:
 		return image, image.get_rect()
@@ -35,16 +34,19 @@ class Main():
 		pygame.display.init()
 		self.screen = pygame.display.set_mode((640, 400))
 		pygame.display.set_caption('Mduel')
-	#Menu
-		self. introimage = loadImage("intro.png",0)
+		#settings
+		self.settings = RawConfigParser()
+		self.settings.readfp(open('settings'))
+		self.port = self.settings.getint('net','port')
+
 	#Create The Backgound
 		self.background = pygame.Surface(self.screen.get_size())
 		self.background = self.background.convert()
 
 	#Font
 		pygame.font.init()
-		self.font = pygame.font.Font("data/marshmallowDuel.ttf", 28)
-		self.font2 = pygame.font.Font("data/marshmallowDuel.ttf", 20)
+		self.font = pygame.font.Font("data/"+theme+"/fonts/marshmallowDuel.ttf", 28)
+		self.font2 = pygame.font.Font("data/"+theme+"/fonts/marshmallowDuel.ttf", 20)
 	#Prepare Game Objects
 		self.clock = pygame.time.Clock()
 		
@@ -69,10 +71,7 @@ class Main():
 			self.playerinfo.append(findall("[-0-9]+", self.playerlist[i]))
 		self.player1Name = self.players[0]
 		self.player2Name = self.players[1]
-	#settings
-		self.settings = RawConfigParser()
-		self.settings.readfp(open('settings'))
-		self.port = self.settings.getint('net','port')
+
 
 		self.sideLeft = pygame.Rect(0, -5, 0, 410)
 		self.sideRight = pygame.Rect(635, -5, 0, 410)
@@ -167,6 +166,7 @@ class Main():
 		self.player2.name = self.player2Name
 		
 	def __initMenu__(self):
+		self. introimage = loadImage("intro.png",0)
 		self.numMenuItmes = 5
 		self.menuItems = [""]*self.numMenuItmes
 		self.selected =  -2 # so none are selected at start
