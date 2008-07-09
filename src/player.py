@@ -37,12 +37,13 @@ class Player(pygame.sprite.Sprite):
 		self.image.unlock()
 		self.image.unlock()
 		
-	def loadAnm(self,name,num):
+	def loadAnm(self, name, num):
+		"""Loads an animation baised on file name"""
 		self.frames[name]=[]
 		for i in range(num):
 			image = main.loadImage(name+str(i)+".png", 0, -1, "player")
 			self.frames[name].append(image)
-			
+
 	def loadImages(self):
 		"""loads images"""
 		self.loadAnm("run", 4)
@@ -54,7 +55,7 @@ class Player(pygame.sprite.Sprite):
 		self.fall = main.loadImage('fall.png', 0, -1, "player")
 		self.stand, self.rect = main.loadImage('stand.png', 1, -1, "player")
 		
-	def setKeys(self, right = K_RIGHT, left = K_LEFT, down = K_DOWN, up = K_UP):
+	def setKeys(self, right = K_RIGHT, left = K_LEFT, down = K_DOWN, up = K_UP, action = K_KP0):
 		"""setKeys(right key, left key, crouch key)
 		Sets the keys for the player object"""
 		self.keys = {}
@@ -62,9 +63,13 @@ class Player(pygame.sprite.Sprite):
 		self.keys["left"] = left
 		self.keys["down"] = down
 		self.keys["up"] = up
+		self.keys["action"] = action
 		
-	def MoveKeyDown(self, key):
-		"""Event fuction for when any keys bound to the current player object are hit"""
+	def keyDown(self, key):
+		"""Event function for when any keys bound to the current player object are hit"""
+		if key is self.keys['action']:
+			if self.currentWeapon is "gun":
+				print "gun"
 		if not self.inAir:
 			if not self.crouching:
 				if key == self.keys["right"]:
@@ -105,8 +110,8 @@ class Player(pygame.sprite.Sprite):
 		if not self.lastkey:
 			self.lastkey = key
 
-	def MoveKeyUp(self, key):
-		"""Event fuction for when any keys bound to the current player object are let go of"""
+	def keyUp(self, key):
+		"""Event function for when any keys bound to the current player object are let go of"""
 		if not self.noKeys:
 			if key == self.lastkey:
 				if key == self.keys["down"]:
@@ -119,6 +124,30 @@ class Player(pygame.sprite.Sprite):
 				self.playerVars['current'] = 0
 
 	def update(self):
+		"""The update function"""
+		self.animate()
+		if self.playerVars['dir']==1:
+			self.image = pygame.transform.flip(self.image, 1, 0)
+		#if self.playerVars['yMove'] < self.maxVol:
+		#	self.playerVars['yMove'] += self.gravity
+		
+		move = self.feetRect.move(0, self.playerVars['yMove'])
+		
+		if move.collidelist(self.platform) == -1:
+			self.rect.move_ip(0, self.playerVars['yMove'])
+			self.feetRect.move_ip(0, self.playerVars['yMove'])
+		else:
+			self.inAir = 0
+			for i in range(self.gravity+1, 0, -1):
+				move = self.feetRect.move(0, i)
+				
+				if move.collidelist(self.platform) == -1:
+					self.rect.move_ip(0, i)
+					self.feetRect.move_ip(0, i)
+		self.rect.move_ip(self.playerVars['xMove'],0)
+		self.feetRect.move_ip(self.playerVars['xMove'],0)
+	def animate(self):
+		"""does all the animations"""
 		if self.fallingforwards:
 			if self.playerVars['current'] == len(self.frames["fallforwards"]) -1:
 				self.playerVars['current'] = 0
@@ -176,27 +205,6 @@ class Player(pygame.sprite.Sprite):
 			self.crouchup = 0
 			self.crouchdown = 0
 			self.image = self.stand
-		if self.playerVars['dir']==1:
-			self.image = pygame.transform.flip(self.image, 1, 0)
-		#if self.playerVars['yMove'] < self.maxVol:
-		#	self.playerVars['yMove'] += self.gravity
-		
-		move = self.feetRect.move(0, self.playerVars['yMove'])
-		
-		if move.collidelist(self.platform) == -1:
-			self.rect.move_ip(0, self.playerVars['yMove'])
-			self.feetRect.move_ip(0, self.playerVars['yMove'])
-		else:
-			self.inAir = 0
-			for i in range(self.gravity+1, 0, -1):
-				move = self.feetRect.move(0, i)
-				
-				if move.collidelist(self.platform) == -1:
-					self.rect.move_ip(0, i)
-					self.feetRect.move_ip(0, i)
-		self.rect.move_ip(self.playerVars['xMove'],0)
-		self.feetRect.move_ip(self.playerVars['xMove'],0)
-
 	def collide(self, dir, speed):
 		"""Acts on collitions"""
 		#if self.playerVars['xMove'] == -6 or self.playerVars['xMove'] == 6 and speed == -6 or speed == 6:

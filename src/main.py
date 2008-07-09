@@ -139,7 +139,7 @@ class Main():
 			self.platfromRects.append(i.rectTop)
 		
 		self.player1 = player.Player(51, 288, self.platfromRects)
-		self.player1.setKeys(K_d, K_a, K_s, K_w)
+		self.player1.setKeys(K_d, K_a, K_s, K_w, K_q)
 		self.player2 = player.Player(531, 288, self.platfromRects, 1)
 		self.player2.setKeys()
 		
@@ -340,9 +340,9 @@ class Main():
 				self.quit = 1
 			elif event.type == KEYDOWN:
 				if event.key in self.player1.keys.values():
-					self.player1.MoveKeyDown(event.key)
+					self.player1.keyDown(event.key)
 				if event.key in self.player2.keys.values():
-					self.player2.MoveKeyDown(event.key)
+					self.player2.keyDown(event.key)
 				if event.key == K_b:
 					self.bind = 1
 				if event.key == K_c:
@@ -354,9 +354,9 @@ class Main():
 					self.background.fill((0, 0, 0))
 			elif event.type == KEYUP:
 				if event.key in self.player1.keys.values():
-					self.player1.MoveKeyUp(event.key)
+					self.player1.keyUp(event.key)
 				if event.key in self.player2.keys.values():
-					self.player2.MoveKeyUp(event.key)
+					self.player2.keyUp(event.key)
 
 	def inMenuEvents(self):
 		for event in pygame.event.get():
