@@ -14,8 +14,12 @@ def loadImage(name, rect, colorkey = None, folder = ""):
 	try:
 		image = pygame.image.load(fullname)
 	except pygame.error, message:
-		print 'Cannot load image:', fullname
-		raise SystemExit, message
+		try:
+			fullname = path.join('data', "main", folder, name)
+			image = pygame.image.load(fullname)
+		except:
+			print 'Cannot load image:', name
+			raise SystemExit, message
 	image = image.convert()
 	image = pygame.transform.scale(image,(image.get_width()*2,image.get_height()*2))
 	if colorkey:
@@ -45,8 +49,8 @@ class Main():
 
 	#Font
 		pygame.font.init()
-		self.font = pygame.font.Font("data/"+theme+"/fonts/marshmallowDuel.ttf", 28)
-		self.font2 = pygame.font.Font("data/"+theme+"/fonts/marshmallowDuel.ttf", 20)
+		self.font = pygame.font.Font(path.join("data", theme, "fonts", "marshmallowDuel.ttf"), 28)
+		self.font2 = pygame.font.Font(path.join("data", theme, "fonts", "marshmallowDuel.ttf"), 20)
 	#Prepare Game Objects
 		self.clock = pygame.time.Clock()
 		
