@@ -8,9 +8,15 @@ from zlib import compress, decompress
 from zlib import error as zlibError
 import sprites, player
 theme = "main"
+images = {}
 def loadImage(name, rect, colorkey = None, folder = ""):
 	global theme
 	fullname = path.join('data', theme, folder, name)
+	if fullname in images:
+		if rect is 0:
+			return images[fullname]
+		else:
+			return images[fullname], images[fullname].get_rect() 
 	try:
 		image = pygame.image.load(fullname)
 	except pygame.error, message:
@@ -26,6 +32,8 @@ def loadImage(name, rect, colorkey = None, folder = ""):
 		if colorkey is -1:
 			colorkey = image.get_at((0,0))
 		image.set_colorkey(colorkey, RLEACCEL)
+	print fullname
+	images[fullname] = image
 	if rect is 0:
 		return image
 	else:
@@ -133,6 +141,7 @@ class Main():
 					self.connect = 0
 			if self.quit:
 				return
+
 	def __initGame__(self):
 		self.platform = self.generateBricks()
 		self.groundGroup = pygame.sprite.Group()
