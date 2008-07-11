@@ -104,8 +104,6 @@ class Player(pygame.sprite.Sprite):
 					self.jumpfwd = 1
 					self.inAir = 1
 					self.playerVars['current'] = 0
-					#self.playerVars['running'] = 0
-					#print "jump fwd"
 
 		if not self.lastkey:
 			self.lastkey = key
@@ -120,7 +118,6 @@ class Player(pygame.sprite.Sprite):
 				self.lastkey = 0
 				self.playerVars['xMove'] = 0
 				self.playerVars['running'] = 0
-				#self.crouching = 0
 				self.playerVars['current'] = 0
 
 	def update(self):
@@ -161,7 +158,6 @@ class Player(pygame.sprite.Sprite):
 				self.playerVars['current'] = 0
 				self.fallingback = 0
 				self.noKeys = 0
-				#self.playerVars['xMove'] = 0
 			else:
 				self.playerVars['current'] += 1
 			self.image = self.frames["fallback"][self.playerVars['current']]
@@ -207,19 +203,16 @@ class Player(pygame.sprite.Sprite):
 			self.image = self.stand
 	def collide(self, dir, speed):
 		"""Acts on collitions"""
-		#if self.playerVars['xMove'] == -6 or self.playerVars['xMove'] == 6 and speed == -6 or speed == 6:
-		#	if self.playerVars['xMove'] == -6:
-		#		self.playerVars['xMove'] = 6
-		#	else:
-		#		self.playerVars['xMove'] = -6
-		#	self.fallingback = 1
-		#	self.playerVars['running'] = 0
-		#	self.playerVars['current'] = 0
-		#	self.noKeys = 1
+		"""#if self.playerVars['xMove'] == -6 or self.playerVars['xMove'] == 6 and speed == -6 or speed == 6:
+			if self.playerVars['xMove'] == -6:
+				self.playerVars['xMove'] = 6
+			else:
+				self.playerVars['xMove'] = -6
+			self.fallingback = 1
+			self.playerVars['running'] = 0
+			self.playerVars['current'] = 0
+			self.noKeys = 1
 			#self.playerVars['xMove'] = 6
-		#else:
-		#	self.fallingforwards = 0
-			
-		#print otherdir, speed
+		else:
+			self.fallingforwards = 0"""
 		return
-		
