@@ -32,7 +32,6 @@ def loadImage(name, rect, colorkey = None, folder = ""):
 		if colorkey is -1:
 			colorkey = image.get_at((0,0))
 		image.set_colorkey(colorkey, RLEACCEL)
-	print fullname
 	images[fullname] = image
 	if rect is 0:
 		return image
@@ -42,7 +41,7 @@ def loadImage(name, rect, colorkey = None, folder = ""):
 class Main():
 	def __init__(self):
 		"""Init function for the main class. Sets up everything."""
-	#Initialize Everything
+		#Initialize Everything
 		pygame.display.init()
 		self.screen = pygame.display.set_mode((640, 400))
 		pygame.display.set_caption('Mduel')
@@ -51,18 +50,18 @@ class Main():
 		self.settings.readfp(open('settings'))
 		self.port = self.settings.getint('net','port')
 
-	#Create The Backgound
+		#Create The Backgound
 		self.background = pygame.Surface(self.screen.get_size())
 		self.background = self.background.convert()
 
-	#Font
+		#Font
 		pygame.font.init()
 		self.font = pygame.font.Font(path.join("data", theme, "fonts", "marshmallowDuel.ttf"), 28)
 		self.font2 = pygame.font.Font(path.join("data", theme, "fonts", "marshmallowDuel.ttf"), 20)
-	#Prepare Game Objects
+
 		self.clock = pygame.time.Clock()
 		
-	#Odds and ends
+		#Odds and ends
 		self.menu = 1
 		self.playing = 0
 		self.page = 0
@@ -73,7 +72,7 @@ class Main():
 		self.getnewkey = 0
 		self.keyItems = {}
 		self.quit = 0
-	#players
+		#players
 		self.playerfile = open("players","r")
 		self.players = []
 		self.playerinfo = []
@@ -90,7 +89,6 @@ class Main():
 		self.sideTop = pygame.Rect(-5, -3, 650, 0)
 		self.sideBottom = pygame.Rect(-5, 340, 645, 0)
 		
-	#menu stuffs
 		self.__initMenu__()
 		
 	def mainloop(self):
@@ -160,7 +158,6 @@ class Main():
 		self.mallow = []
 		for i in range(22):
 			self.mallow.append(sprites.Mallow(i*(15*2),400-(15*2)))
-		#mallows = MallowAnm()
 		self.mallows = []
 		frame = 0
 		for i in range(20):
@@ -203,10 +200,9 @@ class Main():
 					self.player1.currentWeapon = bubble.currentWeapon
 				elif player is 1:
 					self.player2.currentWeapon = bubble.currentWeapon
-		#if len(PixelPerfect.spritecollide_pp(self.player1, self.playerGroup, 0)) == 2:
-		#	self.player1.collide(self.player2.dir, self.player2.xMove)
-		#	self.player2.collide(self.player1.dir, self.player1.xMove)
-		#Draw Everything
+		"""if len(PixelPerfect.spritecollide_pp(self.player1, self.playerGroup, 0)) == 2:
+			self.player1.collide(self.player2.dir, self.player2.xMove)
+			self.player2.collide(self.player1.dir, self.player1.xMove)"""
 	def drawPage(self):
 		"""
 		Pages are 
