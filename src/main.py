@@ -150,8 +150,13 @@ class Main():
 		
 		self.player1 = player.Player(51, 288, self.platfromRects)
 		self.player1.setKeys(K_d, K_a, K_s, K_w, K_q)
+		
 		self.player2 = player.Player(531, 288, self.platfromRects, 1)
 		self.player2.setKeys()
+		
+		self.player1.registerOtherPlayer(self.player2)
+		self.player2.registerOtherPlayer(self.player1)
+		
 		
 		self.rope = self.generateRopes()
 

@@ -74,6 +74,7 @@ class Bubble(pygame.sprite.Sprite):
 		self.locs = [(50, 50),(100, 100),(200, 200)]
 		self.poofing = 0
 		self.popping = 0
+		self.image = self.weapons["tele"]
 		self.hide = 0
 		if num is 0:
 			self.rect.move_ip(51, 288)

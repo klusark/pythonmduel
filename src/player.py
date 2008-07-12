@@ -69,7 +69,9 @@ class Player(pygame.sprite.Sprite):
 		"""Event function for when any keys bound to the current player object are hit"""
 		if key is self.keys['action']:
 			if self.currentWeapon is "gun":
-				print "gun"
+				if self.otherPlayer.rect.collidepoint(self.otherPlayer.rect[0], self.rect[1]):
+					  print self.otherPlayer.name, "is dead"
+			#print self.otherPlayer.rect[1]
 		if not self.inAir:
 			if not self.crouching:
 				if key == self.keys["right"]:
@@ -215,4 +217,8 @@ class Player(pygame.sprite.Sprite):
 			#self.playerVars['xMove'] = 6
 		else:
 			self.fallingforwards = 0"""
-		return
+		pass
+
+	def registerOtherPlayer(self, otherPlayer):
+		"""Needed just so i can get a copy of the other player in the current player"""
+		self.otherPlayer = otherPlayer
