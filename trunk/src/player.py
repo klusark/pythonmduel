@@ -70,8 +70,12 @@ class Player(pygame.sprite.Sprite):
 		if key is self.keys['action']:
 			if self.currentWeapon is "gun":
 				if self.otherPlayer.rect.collidepoint(self.otherPlayer.rect[0], self.rect[1]):
-					  print self.otherPlayer.name, "is dead"
-			#print self.otherPlayer.rect[1]
+					if self.playerVars['dir'] is 1:
+						if self.rect[0] > self.otherPlayer.rect[0]:
+							self.otherPlayer.die(1)
+					else:
+						if self.rect[0] < self.otherPlayer.rect[0]:
+							self.otherPlayer.die(1)
 		if not self.inAir:
 			if not self.crouching:
 				if key == self.keys["right"]:
@@ -121,7 +125,13 @@ class Player(pygame.sprite.Sprite):
 				self.playerVars['xMove'] = 0
 				self.playerVars['running'] = 0
 				self.playerVars['current'] = 0
-
+	def die(self, type):
+		"""Gets the players death animation playing and makes them die
+		types:
+		1= from gun
+		"""
+		if type is 1:
+			pass
 	def update(self):
 		"""The update function"""
 		self.animate()

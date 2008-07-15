@@ -68,7 +68,7 @@ class Bubble(pygame.sprite.Sprite):
 		self.weapons["mine"] = main.loadImage('mine.png', 0, -1)
 		self.weapons["tele"] = self.blank
 		self.powerup = randint(0, 9)
-		self.currentWeapon = self.weapons.keys()[self.powerup]
+		self.currentWeapon = "gun"
 		self.xMove = randint(1,5)
 		self.yMove = randint(1,5)
 		self.locs = [(50, 50),(100, 100),(200, 200)]
