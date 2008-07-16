@@ -71,11 +71,12 @@ class Bubble(pygame.sprite.Sprite):
 		self.currentWeapon = "gun"
 		self.xMove = randint(1,5)
 		self.yMove = randint(1,5)
-		self.locs = [(50, 50),(100, 100),(200, 200)]
+		self.locs = [(30, 200),(320, 30),(609, 200)]
 		self.poofing = 0
 		self.popping = 0
-		self.image = self.weapons["tele"]
+		self.image = self.blank
 		self.hide = 0
+		self.wait = 0.0
 		if num is 0:
 			self.rect.move_ip(51, 288)
 			self.poofing = 1
@@ -113,7 +114,8 @@ class Bubble(pygame.sprite.Sprite):
 				self.image = self.frames["bubblepop"][self.current]
 				self.current += 1
 		elif self.hide:
-			self.image = self.blank
+			#self.image = self.blank
+			pass
 		
 		else:
 			if self.current == len(self.frames["bubble"])-1:
@@ -124,12 +126,17 @@ class Bubble(pygame.sprite.Sprite):
 			self.image.blit(self.weapons[self.currentWeapon], (0, 0))
 			
 			self.rect.move_ip(self.xMove, self.yMove)
-		
+		if self.wait:
+			self.wait -= 0.1
+			if  self.wait <= 0.1:
+				self.wait = 0
+				self.hide = 0
 	
 	def getNewSpawn(self):
 		self.rect[0] = 0
 		self.rect[1] = 0
 		self.rect.move_ip(self.locs[randint(0,2)])
+		self.wait = 1.0
 
 class Rope(pygame.sprite.Sprite):
 	"""The rope"""
