@@ -13,7 +13,7 @@ def loadImage(name, rect, colorkey = None, folder = ""):
 	global theme
 	fullname = path.join('data', theme, folder, name)
 	if fullname in images:
-		if rect is 0:
+		if not rect:
 			return images[fullname]
 		else:
 			return images[fullname], images[fullname].get_rect() 
@@ -33,7 +33,7 @@ def loadImage(name, rect, colorkey = None, folder = ""):
 			colorkey = image.get_at((0, 0))
 		image.set_colorkey(colorkey, RLEACCEL)
 	images[fullname] = image
-	if rect is 0:
+	if not rect:
 		return image
 	else:
 		return image, image.get_rect()
@@ -157,7 +157,7 @@ class Main():
 		self.player1.registerOtherPlayer(self.player2)
 		self.player2.registerOtherPlayer(self.player1)
 		
-		self.emitterImage = loadImage("emitter.png")
+		self.emitterImage = loadImage("emitter.png", 0, -1)
 		
 		self.rope = self.generateRopes()
 

@@ -52,6 +52,7 @@ class Bubble(pygame.sprite.Sprite):
 		self.loadAnm("bubble", 3)
 		self.loadAnm("bubblepop", 2)
 		self.loadAnm("startpoof", 3)
+		self.loadAnm("bubblestart", 3)
 		self.current = 0
 		self.blank = main.loadImage('blank.png', 0, -1)
 		#load weapon images
@@ -136,7 +137,7 @@ class Bubble(pygame.sprite.Sprite):
 		self.rect[0] = 0
 		self.rect[1] = 0
 		self.rect.move_ip(self.locs[randint(0, 2)])
-		self.wait = 1.0
+		self.wait = randint(1, 10)
 
 class Rope(pygame.sprite.Sprite):
 	"""The rope"""
