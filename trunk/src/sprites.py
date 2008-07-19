@@ -4,7 +4,7 @@ from random import randint
 import main
 class Platform(pygame.sprite.Sprite):
 	"""Platform Sprite"""
-	def __init__(self,x,y):
+	def __init__(self, x, y):
 		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
 		self.image, self.rect = main.loadImage('platform.png', 1, -1)
 		self.rect.move_ip(x, y)
@@ -15,7 +15,7 @@ class Platform(pygame.sprite.Sprite):
 
 class Mallow(pygame.sprite.Sprite):
 	"""Mallow Sprite"""
-	def __init__(self,x,y):
+	def __init__(self, x, y):
 		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
 		self.image, self.rect = main.loadImage('mallow.png', 1)
 		self.rect.move_ip(x, y)
@@ -30,7 +30,7 @@ class MallowAnm(pygame.sprite.Sprite):
 		self.loadAnm("mallow", 4)
 		self.current = frame
 
-	def loadAnm(self,name,num):
+	def loadAnm(self, name, num):
 		self.frames[name]=[]
 		for i in range(num):
 			image = main.loadImage(name+str(i)+".png", 0, -1)
@@ -69,9 +69,9 @@ class Bubble(pygame.sprite.Sprite):
 		self.weapons["tele"] = self.blank
 		self.powerup = randint(0, 9)
 		self.currentWeapon = "gun"
-		self.xMove = randint(1,5)
-		self.yMove = randint(1,5)
-		self.locs = [(30, 200),(320, 30),(609, 200)]
+		self.xMove = randint(1, 5)
+		self.yMove = randint(1, 5)
+		self.locs = [(30, 200), (320, 30), (609, 200)]
 		self.poofing = 0
 		self.popping = 0
 		self.image = self.blank
@@ -135,7 +135,7 @@ class Bubble(pygame.sprite.Sprite):
 	def getNewSpawn(self):
 		self.rect[0] = 0
 		self.rect[1] = 0
-		self.rect.move_ip(self.locs[randint(0,2)])
+		self.rect.move_ip(self.locs[randint(0, 2)])
 		self.wait = 1.0
 
 class Rope(pygame.sprite.Sprite):

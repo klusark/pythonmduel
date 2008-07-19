@@ -27,10 +27,10 @@ def loadImage(name, rect, colorkey = None, folder = ""):
 			print 'Cannot load image:', name
 			raise SystemExit, message
 	image = image.convert()
-	image = pygame.transform.scale(image,(image.get_width()*2,image.get_height()*2))
+	image = pygame.transform.scale(image, (image.get_width()*2, image.get_height()*2))
 	if colorkey:
 		if colorkey is -1:
-			colorkey = image.get_at((0,0))
+			colorkey = image.get_at((0, 0))
 		image.set_colorkey(colorkey, RLEACCEL)
 	images[fullname] = image
 	if rect is 0:
@@ -48,7 +48,7 @@ class Main():
 		#settings
 		self.settings = RawConfigParser()
 		self.settings.readfp(open('settings'))
-		self.port = self.settings.getint('net','port')
+		self.port = self.settings.getint('net', 'port')
 
 		#Create The Backgound
 		self.background = pygame.Surface(self.screen.get_size())
@@ -73,7 +73,7 @@ class Main():
 		self.keyItems = {}
 		self.quit = 0
 		#players
-		self.playerfile = open("players","r")
+		self.playerfile = open("players", "r")
 		self.players = []
 		self.playerinfo = []
 		self.playerlist = self.playerfile.readlines()
@@ -157,18 +157,19 @@ class Main():
 		self.player1.registerOtherPlayer(self.player2)
 		self.player2.registerOtherPlayer(self.player1)
 		
+		self.emitterImage = loadImage("emitter.png")
 		
 		self.rope = self.generateRopes()
 
 		self.mallow = []
 		for i in range(22):
-			self.mallow.append(sprites.Mallow(i*(15*2),400-(15*2)))
+			self.mallow.append(sprites.Mallow(i*(15*2), 400-(15*2)))
 		self.mallows = []
 		frame = 0
 		for i in range(20):
 			if frame == 4:
 				frame = 0
-			self.mallows.append(sprites.MallowAnm(i*(16*2),400-16-30,frame))
+			self.mallows.append(sprites.MallowAnm(i*(16*2), 400-16-30, frame))
 			frame +=1
 		self.bubbles = []
 		for i in range(3):
@@ -181,7 +182,7 @@ class Main():
 		self.player2.name = self.player2Name
 		
 	def __initMenu__(self):
-		self. introimage = loadImage("intro.png",0)
+		self. introimage = loadImage("intro.png", 0)
 		self.numMenuItmes = 5
 		self.menuItems = [""]*self.numMenuItmes
 		self.selected =  -2 # so none are selected at start
@@ -208,6 +209,7 @@ class Main():
 		"""if len(PixelPerfect.spritecollide_pp(self.player1, self.playerGroup, 0)) == 2:
 			self.player1.collide(self.player2.dir, self.player2.xMove)
 			self.player2.collide(self.player1.dir, self.player1.xMove)"""
+
 	def drawPage(self):
 		"""
 		Pages are 
@@ -229,15 +231,15 @@ class Main():
 				self.selected = self.numMenuItmes-1
 			if self.selected == self.numMenuItmes:
 				self.selected = 0
-			if not self.drawMenuItem("Begin Game",		0, 50, 9):
+			if not self.drawMenuItem("Begin Game", 		0, 50, 9):
 				return
-			if not self.drawMenuItem("View Fighters",	1, 70, 2):
+			if not self.drawMenuItem("View Fighters", 	1, 70, 2):
 				return
-			if not self.drawMenuItem("Set Controls",	2, 90, 3):
+			if not self.drawMenuItem("Set Controls", 	2, 90, 3):
 				return
-			if not self.drawMenuItem("Options",			3, 110, 4):
+			if not self.drawMenuItem("Options", 		3, 110, 4):
 				return
-			if not self.drawMenuItem("Exit",			4, 130, 8):
+			if not self.drawMenuItem("Exit", 			4, 130, 8):
 				return
 				
 		elif self.page is 2:
@@ -284,18 +286,18 @@ class Main():
 			self.posinfo["x2"]=450
 			self.posinfo["colour1"]=(176, 0, 0)
 			self.posinfo["colour2"]=(0, 48, 192)
-			for i in range(1,3):
+			for i in range(1, 3):
 				stri = str(i)
 
 				self.text = self.font.render("player.Player "+str(i), 0, self.posinfo["colour"+stri])
-				self.background.blit(self.text, (self.posinfo["x"+stri],25))
+				self.background.blit(self.text, (self.posinfo["x"+stri], 25))
 				
 				self.setNewKey("Right", "right", stri, 50)
 				self.setNewKey("Left", "left", stri, 75)
 				self.setNewKey("Crouch", "down", stri, 100)
 				self.setNewKey("Jump", "up", stri, 125)
 		elif self.page is 4:
-			if not self.drawMenuItem("Net",	0, 50, 5):
+			if not self.drawMenuItem("Net", 0, 50, 5):
 				return
 		elif self.page is 5:
 			pass
@@ -422,7 +424,7 @@ class Main():
 		if self.selected == selectId:
 			self.menucolour = (176, 0, 0)
 		else:
-			self.menucolour = (255,255,255)
+			self.menucolour = (255, 255, 255)
 		text = self.font.render(text, 0, self.menucolour)
 		self.menuItems[selectId] = text.get_rect(center=(self.background.get_width()/2, y))
 		self.background.blit(text, self.menuItems[selectId])
@@ -435,11 +437,11 @@ class Main():
 		
 	def setNewKey(self, name, key, i, y):
 		self.text = self.font.render(name+": "+pygame.key.name(self.posinfo["p"+i].keys[key]), 0, self.posinfo["colour"+i])
-		self.keyItems["textpos"+i] = self.text.get_rect(x=self.posinfo["x"+i],y=y)
+		self.keyItems["textpos"+i] = self.text.get_rect(x=self.posinfo["x"+i], y=y)
 		self.background.blit(self.text, self.keyItems["textpos"+i])
 		if self.keyItems["textpos"+i].collidepoint(pygame.mouse.get_pos()) == 1 and pygame.mouse.get_pressed()[0]:
-			self.text = self.font.render("Press new "+name+" key: ", 0, (255,255,255))
-			self.pos = self.text.get_rect(centerx=self.background.get_width()/2,y=350)
+			self.text = self.font.render("Press new "+name+" key: ", 0, (255, 255, 255))
+			self.pos = self.text.get_rect(centerx=self.background.get_width()/2, y=350)
 			self.background.blit(self.text, self.pos)
 			self.getnewkey = (key, i)
 			

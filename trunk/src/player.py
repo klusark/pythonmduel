@@ -10,7 +10,7 @@ class Player(pygame.sprite.Sprite):
 		self.loadImages()
 		self.rect.inflate_ip(-10, 0)
 		self.image = self.stand
-		self.rect.move_ip(x,y)
+		self.rect.move_ip(x, y)
 		self.feetRect = pygame.Rect(x+5, y+41, 38, 7)
 		self.platform = platform
 		self.playerVars = {}
@@ -153,8 +153,8 @@ class Player(pygame.sprite.Sprite):
 				if move.collidelist(self.platform) == -1:
 					self.rect.move_ip(0, i)
 					self.feetRect.move_ip(0, i)
-		self.rect.move_ip(self.playerVars['xMove'],0)
-		self.feetRect.move_ip(self.playerVars['xMove'],0)
+		self.rect.move_ip(self.playerVars['xMove'], 0)
+		self.feetRect.move_ip(self.playerVars['xMove'], 0)
 	def animate(self):
 		"""does all the animations"""
 		if self.fallingforwards:
