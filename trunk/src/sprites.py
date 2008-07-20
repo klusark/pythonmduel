@@ -75,6 +75,7 @@ class Bubble(pygame.sprite.Sprite):
 		self.locs = [(30, 200), (320, 30), (609, 200)]
 		self.poofing = 0
 		self.popping = 0
+		self.bubblestarting = 0
 		self.image = self.blank
 		self.hide = 0
 		self.wait = 0.0
@@ -114,6 +115,13 @@ class Bubble(pygame.sprite.Sprite):
 			else:
 				self.image = self.frames["bubblepop"][self.current]
 				self.current += 1
+		elif self.bubblestarting:
+			if self.current == len(self.frames["bubblestart"]):
+				self.bubblestarting = 0
+				self.current = 0
+			else:
+				self.image = self.frames["bubblestart"][self.current]
+				self.current += 1
 		elif self.hide:
 			#self.image = self.blank
 			pass
@@ -127,11 +135,14 @@ class Bubble(pygame.sprite.Sprite):
 			self.image.blit(self.weapons[self.currentWeapon], (0, 0))
 			
 			self.rect.move_ip(self.xMove, self.yMove)
+		
 		if self.wait:
 			self.wait -= 0.1
 			if  self.wait <= 0.1:
 				self.wait = 0
 				self.hide = 0
+				self.current = 0
+				self.bubblestarting = 1
 	
 	def getNewSpawn(self):
 		self.rect[0] = 0

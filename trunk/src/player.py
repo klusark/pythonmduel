@@ -31,6 +31,7 @@ class Player(pygame.sprite.Sprite):
 		self.inAir = 0
 		self.jumpfwd = 0
 		self.noKeys = 0
+		self.shooting = 0
 		self.currentWeapon = None
 		self.name = "Unset"
 		self.hitmask = pygame.surfarray.array_colorkey(self.image)
@@ -51,6 +52,7 @@ class Player(pygame.sprite.Sprite):
 		self.loadAnm("fallforwards", 2)
 		self.loadAnm("fallback", 2)
 		self.loadAnm("crouch", 2)
+		self.loadAnm("shoot", 2)
 		self.loadAnm("roll", 4)
 		self.fall = main.loadImage('fall.png', 0, -1, "player")
 		self.stand, self.rect = main.loadImage('stand.png', 1, -1, "player")
@@ -69,6 +71,7 @@ class Player(pygame.sprite.Sprite):
 		"""Event function for when any keys bound to the current player object are hit"""
 		if key is self.keys['action']:
 			if self.currentWeapon is "gun":
+				self.shooting = 1
 				if self.otherPlayer.rect.collidepoint(self.otherPlayer.rect[0], self.rect[1]):
 					if self.playerVars['dir'] is 1:
 						if self.rect[0] > self.otherPlayer.rect[0]:
@@ -205,6 +208,13 @@ class Player(pygame.sprite.Sprite):
 			self.image = self.frames["run"][self.playerVars['current']]
 			if self.playerVars['current'] == len(self.frames["run"]) -1:
 				self.playerVars['current'] = 0
+			else:
+				self.playerVars['current'] += 1
+		elif self.shooting:
+			self.image = self.frames["shoot"][self.playerVars['current']]
+			if self.playerVars['current'] == len(self.frames["shoot"]) -1:
+				self.playerVars['current'] = 0
+				self.shooting = 0
 			else:
 				self.playerVars['current'] += 1
 		elif self.inAir:
