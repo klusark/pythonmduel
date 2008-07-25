@@ -1,44 +1,13 @@
-import pygame, time, PixelPerfect, cPickle, socket, select
+import pygame, time, cPickle, socket, select
 from ConfigParser import RawConfigParser
 from random import randint
-from re import findall
+#from re import findall
 from os import path
 from pygame.locals import *
-from zlib import compress, decompress
-from zlib import error as zlibError
-import sprites, player
+import sprites, player, menu, image
 theme = "main"
-images = {}
-def loadImage(name, rect, colorkey = None, folder = ""):
-	global theme
-	fullname = path.join('data', theme, folder, name)
-	if fullname in images:
-		if not rect:
-			return images[fullname]
-		else:
-			return images[fullname], images[fullname].get_rect() 
-	try:
-		image = pygame.image.load(fullname)
-	except pygame.error, message:
-		try:
-			fullname = path.join('data', "main", folder, name)
-			image = pygame.image.load(fullname)
-		except:
-			print 'Cannot load image:', name
-			raise SystemExit, message
-	image = image.convert()
-	image = pygame.transform.scale(image, (image.get_width()*2, image.get_height()*2))
-	if colorkey:
-		if colorkey is -1:
-			colorkey = image.get_at((0, 0))
-		image.set_colorkey(colorkey, RLEACCEL)
-	images[fullname] = image
-	if not rect:
-		return image
-	else:
-		return image, image.get_rect()
 
-class Main():
+class Main(image.loadImage, menu.Menu):
 	def __init__(self):
 		"""Init function for the main class. Sets up everything."""
 		#Initialize Everything
@@ -49,7 +18,9 @@ class Main():
 		self.settings = RawConfigParser()
 		self.settings.readfp(open('settings'))
 		self.port = self.settings.getint('net', 'port')
-
+		self.bindAddy = self.settings.get('net', 'bindAddy')
+		self.connectAddy = self.settings.get('net', 'connectAddy')
+		
 		#Create The Backgound
 		self.background = pygame.Surface(self.screen.get_size())
 		self.background = self.background.convert()
@@ -73,15 +44,15 @@ class Main():
 		self.keyItems = {}
 		self.quit = 0
 		#players
-		self.playerfile = open("players", "r")
-		self.players = []
+		"""self.playerfile = open("players", "r")
+		self.playerNames = []
 		self.playerinfo = []
 		self.playerlist = self.playerfile.readlines()
 		for i in range(6):
-			self.players.append("".join(findall("[a-zA-Z]+", self.playerlist[i])))
-			self.playerinfo.append(findall("[-0-9]+", self.playerlist[i]))
-		self.player1Name = self.players[0]
-		self.player2Name = self.players[1]
+			self.playerNames.append("".join(findall("[a-zA-Z]+", self.playerlist[i])))
+			self.playerinfo.append(findall("[-0-9]+", self.playerlist[i]))"""
+		self.player1Name = "jim"
+		self.player2Name = "bob"
 
 
 		self.sideLeft = pygame.Rect(0, -5, 0, 410)
@@ -95,7 +66,7 @@ class Main():
 		"""The games main loop"""
 		while 1:
 			if self.playing:
-				self.clock.tick(10)
+				self.clock.tick(60)
 				self.inGameEvents()
 				self.allsprites.update()
 				self.colisions()
@@ -129,15 +100,19 @@ class Main():
 						self.connect=0
 						continue
 				read, write, err = select.select([self.s], [self.s], [])
-				try:
-					if len(read):
-						self.player1 = self.depickelForRecving(self.s.recv(512), self.player1)
-					if len(write):
-						self.s.send(self.pickelForSending(self.player2))
-				except socket.error, msg:
-					print msg
-					self.connect = 0
+				#print read, write
+				#try:
+					#if len(read):
+					#	self.player1 = self.depickelForRecving(self.s.recv(512), self.player1)
+					#if len(write):
+						#self.s.send(self.pickelForSending(self.player2))
+				#except socket.error, msg:
+				#	print msg
+				#	self.connect = 0
 			if self.quit:
+				if self.connect:
+					self.s.send(cPickle.dumps({"type" : 7}))
+					self.s.shutdown(2)
 				return
 
 	def __initGame__(self):
@@ -145,19 +120,22 @@ class Main():
 		self.groundGroup = pygame.sprite.Group()
 		self.groundGroup.add(self.platform)
 		self.platfromRects = []
+		
 		for i in self.platform:
 			self.platfromRects.append(i.rectTop)
+			
+		self.players = []
 		
-		self.player1 = player.Player(51, 288, self.platfromRects)
-		self.player1.setKeys(K_d, K_a, K_s, K_w, K_q)
+		self.players.append(player.Player(51, 288))
+		self.players[0].setKeys(K_d, K_a, K_s, K_w, K_q)
 		
-		self.player2 = player.Player(531, 288, self.platfromRects, 1)
-		self.player2.setKeys()
+		self.players.append(player.Player(531, 288, 1))
+		self.players[1].setKeys()
 		
-		self.player1.registerOtherPlayer(self.player2)
-		self.player2.registerOtherPlayer(self.player1)
+		self.players[0].registerVars(self.players[1], self.platfromRects, None)
+		self.players[1].registerVars(self.players[0], self.platfromRects, None)
 		
-		self.emitterImage = loadImage("emitter.png", 0, -1)
+		self.emitterImage = self.loadImage("emitter.png", 0, -1)
 		
 		self.rope = self.generateRopes()
 
@@ -175,17 +153,12 @@ class Main():
 		for i in range(3):
 			self.bubbles.append(sprites.Bubble(i))
 		
-		self.allsprites = pygame.sprite.OrderedUpdates((self.platform, self.mallows, self.mallow, self.rope, self.player1, self.player2, self.bubbles))
-		self.playerGroup = pygame.sprite.Group()
-		self.playerGroup.add(self.player1, self.player2)
-		self.player1.name = self.player1Name
-		self.player2.name = self.player2Name
 		
-	def __initMenu__(self):
-		self. introimage = loadImage("intro.png", 0)
-		self.numMenuItmes = 5
-		self.menuItems = [""]*self.numMenuItmes
-		self.selected =  -2 # so none are selected at start
+		self.playerGroup = pygame.sprite.Group()
+		self.playerGroup.add(self.players[0], self.players[1])
+		self.allsprites = pygame.sprite.OrderedUpdates((self.platform, self.mallows, self.mallow, self.rope, self.playerGroup, self.bubbles))
+		self.players[0].name = self.player1Name
+		self.players[0].name = self.player2Name
 		
 	def colisions(self):
 		for bubble in self.bubbles:
@@ -199,125 +172,20 @@ class Main():
 					bubble.yMove = -bubble.yMove
 				elif side is 3:
 					bubble.yMove = -bubble.yMove
-			player = bubble.rect.collidelist([self.player1, self.player2])
+			player = bubble.rect.collidelist([self.players[0], self.players[1]])
 			if player is not -1 and bubble.image in bubble.frames["bubble"]:
 				bubble.popping = 1
-				if player is 0:
+				self.players[player].currentWeapon = bubble.currentWeapon
+				if self.players[player].currentWeapon is "gun":
+					self.players[player].ammo = 4
+				"""if player is 0:
 					self.player1.currentWeapon = bubble.currentWeapon
 				elif player is 1:
-					self.player2.currentWeapon = bubble.currentWeapon
+					self.player2.currentWeapon = bubble.currentWeapon"""
 		"""if len(PixelPerfect.spritecollide_pp(self.player1, self.playerGroup, 0)) == 2:
 			self.player1.collide(self.player2.dir, self.player2.xMove)
 			self.player2.collide(self.player1.dir, self.player1.xMove)"""
-
-	def drawPage(self):
-		"""
-		Pages are 
-		0: shows intro image 
-		1: main menu 
-		2: view fighters 
-		3: set controls 
-		4: options
-		5: Net options
-		8: quits the game 
-		9: displays who is playing when game is starting 
-		10: starts game
-		"""
-		if self.page is 0:
-			self.background.blit(self.introimage, (0, 0))
-			
-		elif self.page is 1:
-			if self.selected == -1:
-				self.selected = self.numMenuItmes-1
-			if self.selected == self.numMenuItmes:
-				self.selected = 0
-			if not self.drawMenuItem("Begin Game", 		0, 50, 9):
-				return
-			if not self.drawMenuItem("View Fighters", 	1, 70, 2):
-				return
-			if not self.drawMenuItem("Set Controls", 	2, 90, 3):
-				return
-			if not self.drawMenuItem("Options", 		3, 110, 4):
-				return
-			if not self.drawMenuItem("Exit", 			4, 130, 8):
-				return
-				
-		elif self.page is 2:
-			for i in range(len(self.players)):
-				if self.players[i] == self.player1Name:
-					self.colour = (176, 0, 0)
-				elif self.players[i] == self.player2Name:
-					self.colour = (0, 48, 192)
-				else:
-					self.colour = (164, 64, 164)
-				
-				y=144+18*(i+1)
-				self.text = self.font2.render(self.players[i], 0, self.colour)
-				self.background.blit(self.text, (0, y))
-				
-				self.text = self.font2.render(self.playerinfo[i][0], 0, self.colour)
-				self.background.blit(self.text, (150, y))
-				
-				self.text = self.font2.render(self.playerinfo[i][1], 0, self.colour)
-				self.background.blit(self.text, (250, y))
-				
-				self.text = self.font2.render(self.playerinfo[i][2], 0, self.colour)
-				self.background.blit(self.text, (300, y))
-				
-				self.text = self.font2.render(self.playerinfo[i][3], 0, self.colour)
-				self.background.blit(self.text, (400, y))
-				
-				self.text = self.font2.render(self.playerinfo[i][4], 0, self.colour)
-				self.background.blit(self.text, (500, y))
-				
-			self.drawText("Name", self.font, 0, 140, (255, 255, 255))
-			self.drawText("Rank", self.font, 150, 140, (255, 255, 255))
-			self.drawText("W", self.font, 250, 140, (255, 255, 255))
-			self.drawText("L", self.font, 300, 140, (255, 255, 255))
-			self.drawText("S", self.font, 400, 140, (255, 255, 255))
-			self.drawText("FIDS", self.font, 500, 140, (255, 255, 255))
-
-			
-		elif self.page is 3:
-			self.posinfo={}
-			self.posinfo["p1"]=self.player1
-			self.posinfo["p2"]=self.player2
-			self.posinfo["x1"]=50
-			self.posinfo["x2"]=450
-			self.posinfo["colour1"]=(176, 0, 0)
-			self.posinfo["colour2"]=(0, 48, 192)
-			for i in range(1, 3):
-				stri = str(i)
-
-				self.text = self.font.render("player.Player "+str(i), 0, self.posinfo["colour"+stri])
-				self.background.blit(self.text, (self.posinfo["x"+stri], 25))
-				
-				self.setNewKey("Right", "right", stri, 50)
-				self.setNewKey("Left", "left", stri, 75)
-				self.setNewKey("Crouch", "down", stri, 100)
-				self.setNewKey("Jump", "up", stri, 125)
-		elif self.page is 4:
-			if not self.drawMenuItem("Net", 0, 50, 5):
-				return
-		elif self.page is 5:
-			pass
-		elif self.page is 8:
-			self.quit = 1
-		elif self.page is 9:
-			self.text = self.font.render(self.player1Name + " vs. " + self.player2Name, 0, (164, 64, 164))
-			self.pos = self.text.get_rect(center = (self.background.get_width()/2, self.background.get_height()/2))
-			self.background.blit(self.text, self.pos)
-			
-		elif self.page is 10:
-			self.playing = 1
-			self.menu = 0
-			self.background.fill((0, 0, 0))
-			self.__initGame__()
-			
-	def drawText(self, text, font, x, y, colour):
-		text = font.render(text, 0, colour)
-		self.background.blit(text, (x, y))
-		
+	
 	def generateBricks(self):
 		"""platform generator"""
 		platform = []
@@ -350,15 +218,14 @@ class Main():
 		return rope
 
 	def inGameEvents(self):
-		"""Handle Input Events"""
+		"""Handle events in the game"""
 		for event in pygame.event.get():
 			if event.type == QUIT:
 				self.quit = 1
 			elif event.type == KEYDOWN:
-				if event.key in self.player1.keys.values():
-					self.player1.keyDown(event.key)
-				if event.key in self.player2.keys.values():
-					self.player2.keyDown(event.key)
+				for i in range(2):
+					if event.key in self.players[i].keys.values():
+					   self.players[i].keyDown(event.key)
 				if event.key == K_b:
 					self.bind = 1
 				if event.key == K_c:
@@ -369,102 +236,32 @@ class Main():
 					self.page = 1
 					self.background.fill((0, 0, 0))
 			elif event.type == KEYUP:
-				if event.key in self.player1.keys.values():
-					self.player1.keyUp(event.key)
-				if event.key in self.player2.keys.values():
-					self.player2.keyUp(event.key)
-
-	def inMenuEvents(self):
-		for event in pygame.event.get():
-			if event.type == QUIT:
-				self.quit = 1
-			elif event.type == KEYDOWN and event.key == K_ESCAPE:
-				self.page = 1
-				self.background.fill((0, 0, 0))
-			elif event.type == KEYDOWN:
-				if self.page is 0:
-					if event.key is K_SPACE:
-						self.page = 1
-						self.background.fill((0, 0, 0))
-				if self.page is 1:
-					if event.key == K_DOWN:
-						if self.selected == -2:
-							self.selected = self.numMenuItmes-1
-						self.selected +=1
-					if event.key == K_UP:
-						if self.selected == -2:
-							self.selected = 0
-						self.selected -=1
-
-					if event.key == K_RETURN:
-						if self.selected == 0:
-							self.page=9
-							self.background.fill((0, 0, 0))
-						elif self.selected == 1:
-							self.page = 2
-							self.background.fill((0, 0, 0))
-						elif self.selected == 2:
-							self.page = 3
-							self.background.fill((0, 0, 0))
-						elif self.selected == 3:
-							self.page = 4
-							self.background.fill((0, 0, 0))
-						elif self.selected == 4:
-							self.quit = 1
-				if self.page is 3:
-					if self.getnewkey:
-						self.posinfo["p"+self.getnewkey[1]].keys[self.getnewkey[0]] = event.key
-						self.getnewkey = 0
-						self.background.fill((0, 0, 0))
-				if self.page is 9:
-					if event.key == K_SPACE:
-						self.page = 10
-					
-	def drawMenuItem(self, text, selectId, y, page):
-		if self.selected == selectId:
-			self.menucolour = (176, 0, 0)
-		else:
-			self.menucolour = (255, 255, 255)
-		text = self.font.render(text, 0, self.menucolour)
-		self.menuItems[selectId] = text.get_rect(center=(self.background.get_width()/2, y))
-		self.background.blit(text, self.menuItems[selectId])
-		
-		if self.menuItems[selectId].collidepoint(pygame.mouse.get_pos()) == 1 and pygame.mouse.get_pressed()[0]:
-			self.page = page
-			self.background.fill((0, 0, 0))
-			return 0
-		return 1
-		
-	def setNewKey(self, name, key, i, y):
-		self.text = self.font.render(name+": "+pygame.key.name(self.posinfo["p"+i].keys[key]), 0, self.posinfo["colour"+i])
-		self.keyItems["textpos"+i] = self.text.get_rect(x=self.posinfo["x"+i], y=y)
-		self.background.blit(self.text, self.keyItems["textpos"+i])
-		if self.keyItems["textpos"+i].collidepoint(pygame.mouse.get_pos()) == 1 and pygame.mouse.get_pressed()[0]:
-			self.text = self.font.render("Press new "+name+" key: ", 0, (255, 255, 255))
-			self.pos = self.text.get_rect(centerx=self.background.get_width()/2, y=350)
-			self.background.blit(self.text, self.pos)
-			self.getnewkey = (key, i)
+				for i in range(2):
+					if event.key in self.players[i].keys.values():
+						self.players[i].keyUp(event.key)
 			
 	def connects(self):
 		"""Connects to the server"""
-		self.HOST = '127.0.0.1'	# The remote host
 		self.s = socket.socket()
 		try:
-			self.s.connect((self.HOST, self.port))
+			self.s.connect((self.connectAddy, self.port))
 		except socket.error, msg:
 			print msg[1]
 			return 0
+		self.s.send(cPickle.dumps({"type":6, "name":"joel"}))
 		return 1
 
 	def binds(self):
 		"""Makes the curret player wait for a connection from another player"""
-		self.HOST = ''
 		self.s = socket.socket()
-		self.s.bind((self.HOST, self.port))
+		try:
+			self.s.bind((self.bindAddy, self.port))
+		except socket.error, msg:
+			print msg[1]
+			return 0
 		self.s.listen(1)
 		self.conn, self.addr = self.s.accept()
 		print 'Connected by', self.addr
-
 
 	def pickelForSending(self, player):
 		"""Gets the infermation in the player objet ready for sending"""

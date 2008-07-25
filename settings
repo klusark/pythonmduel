@@ -1,2 +1,5 @@
 [net]
-port = 50008
+port = 63835
+masterport = 63836
+bindAddy = 127.0.0.1
+connectAddy = 127.0.0.1
