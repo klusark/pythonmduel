@@ -1,9 +1,9 @@
 import pygame
 from pygame.locals import *
-import main
-class Player(pygame.sprite.Sprite):
+import image
+class Player(pygame.sprite.Sprite, image.loadImage):
 	"""The Payer class"""
-	def __init__(self, x, y, platform, dir = 0):
+	def __init__(self, x, y, dir = 0):
 		"""Initializes Player class"""
 		pygame.sprite.Sprite.__init__(self) #call Sprite initializer
 		self.frames = {}
@@ -12,7 +12,7 @@ class Player(pygame.sprite.Sprite):
 		self.image = self.stand
 		self.rect.move_ip(x, y)
 		self.feetRect = pygame.Rect(x+5, y+41, 38, 7)
-		self.platform = platform
+		
 		self.playerVars = {}
 		self.playerVars['xMove'] = 0
 		self.playerVars['yMove'] = 0
@@ -27,8 +27,9 @@ class Player(pygame.sprite.Sprite):
 		self.fallingback = 0
 		self.rolling = 0
 		self.gravity = 1
-		self.maxVol = 6
+		self.maxVol = 8
 		self.inAir = 0
+		self.ammo = 0
 		self.jumpfwd = 0
 		self.noKeys = 0
 		self.shooting = 0
@@ -42,7 +43,7 @@ class Player(pygame.sprite.Sprite):
 		"""Loads an animation baised on file name"""
 		self.frames[name]=[]
 		for i in range(num):
-			image = main.loadImage(name+str(i)+".png", 0, -1, "player")
+			image = self.loadImage(name+str(i)+".png", 0, -1, "player", )
 			self.frames[name].append(image)
 
 	def loadImages(self):
@@ -54,8 +55,10 @@ class Player(pygame.sprite.Sprite):
 		self.loadAnm("crouch", 2)
 		self.loadAnm("shoot", 2)
 		self.loadAnm("roll", 4)
-		self.fall = main.loadImage('fall.png', 0, -1, "player")
-		self.stand, self.rect = main.loadImage('stand.png', 1, -1, "player")
+		self.loadAnm("upjump", 5)
+		self.fall = self.loadImage('fall.png', 0, -1, "player")
+		self.stand, self.rect = self.loadImage('stand.png', 1, -1, "player")
+		self.invis = self.loadImage("invis.png", 0, -1, "player")
 		
 	def setKeys(self, right = K_RIGHT, left = K_LEFT, down = K_DOWN, up = K_UP, action = K_KP0):
 		"""setKeys(right key, left key, crouch key)
@@ -72,6 +75,10 @@ class Player(pygame.sprite.Sprite):
 		if key is self.keys['action']:
 			if self.currentWeapon is "gun":
 				self.shooting = 1
+				if self.ammo is 0:
+					self.currentWeapon = None
+				else:
+					self.ammo -= 1
 				if self.otherPlayer.rect.collidepoint(self.otherPlayer.rect[0], self.rect[1]):
 					if self.playerVars['dir'] is 1:
 						if self.rect[0] > self.otherPlayer.rect[0]:
@@ -79,6 +86,10 @@ class Player(pygame.sprite.Sprite):
 					else:
 						if self.rect[0] < self.otherPlayer.rect[0]:
 							self.otherPlayer.die(1)
+			if self.currentWeapon is "invis":
+				
+				self.image = self.invis
+			print self.currentWeapon
 		if not self.inAir:
 			if not self.crouching:
 				if key == self.keys["right"]:
@@ -95,6 +106,8 @@ class Player(pygame.sprite.Sprite):
 					self.crouching = 1
 					self.playerVars['current'] = 0
 				if key == self.keys["up"]:
+					self.playerVars["yMove"] = -10
+					self.inAir = True
 					print "upjump"
 			elif self.playerVars['running']:
 				if key == self.keys["down"]:
@@ -128,6 +141,7 @@ class Player(pygame.sprite.Sprite):
 				self.playerVars['xMove'] = 0
 				self.playerVars['running'] = 0
 				self.playerVars['current'] = 0
+
 	def die(self, type):
 		"""Gets the players death animation playing and makes them die
 		types:
@@ -135,20 +149,22 @@ class Player(pygame.sprite.Sprite):
 		"""
 		if type is 1:
 			pass
+
 	def update(self):
 		"""The update function"""
 		self.animate()
 		if self.playerVars['dir']==1:
 			self.image = pygame.transform.flip(self.image, 1, 0)
-		#if self.playerVars['yMove'] < self.maxVol:
-		#	self.playerVars['yMove'] += self.gravity
-		
+		self.playerVars['yMove'] += self.gravity
+		if self.playerVars['yMove'] > self.maxVol:
+			self.playerVars['yMove'] = self.maxVol
 		move = self.feetRect.move(0, self.playerVars['yMove'])
 		
 		if move.collidelist(self.platform) == -1:
 			self.rect.move_ip(0, self.playerVars['yMove'])
 			self.feetRect.move_ip(0, self.playerVars['yMove'])
 		else:
+			self.playerVars['yMove'] = 0
 			self.inAir = 0
 			for i in range(self.gravity+1, 0, -1):
 				move = self.feetRect.move(0, i)
@@ -158,6 +174,7 @@ class Player(pygame.sprite.Sprite):
 					self.feetRect.move_ip(0, i)
 		self.rect.move_ip(self.playerVars['xMove'], 0)
 		self.feetRect.move_ip(self.playerVars['xMove'], 0)
+
 	def animate(self):
 		"""does all the animations"""
 		if self.fallingforwards:
@@ -223,6 +240,7 @@ class Player(pygame.sprite.Sprite):
 			self.crouchup = 0
 			self.crouchdown = 0
 			self.image = self.stand
+
 	def collide(self, dir, speed):
 		"""Acts on collitions"""
 		"""#if self.playerVars['xMove'] == -6 or self.playerVars['xMove'] == 6 and speed == -6 or speed == 6:
@@ -239,6 +257,8 @@ class Player(pygame.sprite.Sprite):
 			self.fallingforwards = 0"""
 		pass
 
-	def registerOtherPlayer(self, otherPlayer):
+	def registerVars(self, otherPlayer, platform, rope):
 		"""Needed just so i can get a copy of the other player in the current player"""
 		self.otherPlayer = otherPlayer
+		self.platform = platform
+		self.rope = rope
