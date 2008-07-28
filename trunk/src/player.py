@@ -19,6 +19,7 @@ class Player(pygame.sprite.Sprite, image.loadImage):
 		self.playerVars['current'] = 0
 		self.playerVars['running'] = 0
 		self.playerVars['dir'] = dir
+		self.moveSpeed = 1
 		self.lastkey = 0
 		self.crouching = 0
 		self.crouchdown = 0
@@ -36,8 +37,16 @@ class Player(pygame.sprite.Sprite, image.loadImage):
 		self.currentWeapon = None
 		self.name = "Unset"
 		self.hitmask = pygame.surfarray.array_colorkey(self.image)
-		self.image.unlock()
-		self.image.unlock()
+		#self.image.unlock()
+		#self.image.unlock()
+		self.position = (0, 0)
+		#self.images = []
+		self.current_image = 0
+		self.time_between_frames = 500
+		self.millisecond = 0
+		self.last_animated = 0
+		
+		
 		
 	def loadAnm(self, name, num):
 		"""Loads an animation baised on file name"""
@@ -93,11 +102,11 @@ class Player(pygame.sprite.Sprite, image.loadImage):
 		if not self.inAir:
 			if not self.crouching:
 				if key == self.keys["right"]:
-					self.playerVars['xMove'] = 6
+					self.playerVars['xMove'] = self.moveSpeed
 					self.playerVars['dir'] = 0
 					self.playerVars['running'] = 1
 				elif key == self.keys["left"]:
-					self.playerVars['xMove'] = -6
+					self.playerVars['xMove'] = -self.moveSpeed
 					self.playerVars['dir'] = 1
 					self.playerVars['running'] = 1
 			if not self.playerVars['running']:
@@ -153,11 +162,11 @@ class Player(pygame.sprite.Sprite, image.loadImage):
 	def update(self):
 		"""The update function"""
 		self.animate()
-		if self.playerVars['dir']==1:
+		if self.playerVars['dir'] == 1:
 			self.image = pygame.transform.flip(self.image, 1, 0)
-		self.playerVars['yMove'] += self.gravity
-		if self.playerVars['yMove'] > self.maxVol:
-			self.playerVars['yMove'] = self.maxVol
+		#self.playerVars['yMove'] += self.gravity
+		#if self.playerVars['yMove'] > self.maxVol:
+		#	self.playerVars['yMove'] = self.maxVol
 		move = self.feetRect.move(0, self.playerVars['yMove'])
 		
 		if move.collidelist(self.platform) == -1:
@@ -222,11 +231,18 @@ class Player(pygame.sprite.Sprite, image.loadImage):
 			else:
 				self.playerVars['current'] += 1
 		elif self.playerVars['running']:
-			self.image = self.frames["run"][self.playerVars['current']]
-			if self.playerVars['current'] == len(self.frames["run"]) -1:
-				self.playerVars['current'] = 0
-			else:
-				self.playerVars['current'] += 1
+			now = pygame.time.get_ticks()
+			milliseconds_elapsed = now - self.last_animated
+			for real_millisecond in range(milliseconds_elapsed):
+				for sprite in self.frames["run"]:
+					self.millisecond += 1
+					if self.millisecond == self.time_between_frames:
+						
+						self.millisecond = 0
+						self.current_image += 1
+						self.current_image %= len(self.frames["run"])
+						self.image = self.frames["run"][self.current_image]
+			self.last_animated = now
 		elif self.shooting:
 			self.image = self.frames["shoot"][self.playerVars['current']]
 			if self.playerVars['current'] == len(self.frames["shoot"]) -1:

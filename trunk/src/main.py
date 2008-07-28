@@ -18,7 +18,6 @@ class Main(image.loadImage, menu.Menu):
 		self.settings = RawConfigParser()
 		self.settings.readfp(open('settings'))
 		self.port = self.settings.getint('net', 'port')
-		self.bindAddy = self.settings.get('net', 'bindAddy')
 		self.connectAddy = self.settings.get('net', 'connectAddy')
 		
 		#Create The Backgound
@@ -36,13 +35,12 @@ class Main(image.loadImage, menu.Menu):
 		self.menu = 1
 		self.playing = 0
 		self.page = 0
-		self.bind = 0
 		self.connect = 0
-		self.bound = 0
 		self.connected = 0
 		self.getnewkey = 0
 		self.keyItems = {}
 		self.quit = 0
+		self.id = [0]
 		#players
 		"""self.playerfile = open("players", "r")
 		self.playerNames = []
@@ -74,24 +72,11 @@ class Main(image.loadImage, menu.Menu):
 				self.allsprites.draw(self.screen)
 				pygame.display.flip()
 			if self.menu:
-				self.clock.tick(100)
+				self.clock.tick(60)
 				self.inMenuEvents()
 				self.drawPage()
 				self.screen.blit(self.background, (0, 0))
 				pygame.display.flip()
-			if self.bind:
-				if not self.bound:
-					self.binds()
-					self.bound = 1
-				read, write, err = select.select([self.conn], [self.conn], [])
-				try:
-					if len(read):
-						self.player2 = self.depickelForRecving(self.conn.recv(512), self.player2)
-					if len(write):
-						self.conn.send(self.pickelForSending(self.player1))
-				except socket.error, msg:
-					print msg
-					self.bind = 0
 			if self.connect:
 				if not self.connected:
 					if self.connects():
@@ -102,10 +87,12 @@ class Main(image.loadImage, menu.Menu):
 				read, write, err = select.select([self.s], [self.s], [])
 				#print read, write
 				#try:
-					#if len(read):
-					#	self.player1 = self.depickelForRecving(self.s.recv(512), self.player1)
-					#if len(write):
-						#self.s.send(self.pickelForSending(self.player2))
+				if len(read):
+					pass
+				if len(write):
+					packet = self.players[self.id].playerVars
+					packet["type"] = 9
+					self.s.send(cPickle.dumps(packet))
 				#except socket.error, msg:
 				#	print msg
 				#	self.connect = 0
@@ -124,12 +111,12 @@ class Main(image.loadImage, menu.Menu):
 		for i in self.platform:
 			self.platfromRects.append(i.rectTop)
 			
-		self.players = []
+		self.players = {}
 		
-		self.players.append(player.Player(51, 288))
+		self.players[0] = player.Player(51, 288)
 		self.players[0].setKeys(K_d, K_a, K_s, K_w, K_q)
 		
-		self.players.append(player.Player(531, 288, 1))
+		self.players[1] = player.Player(531, 288, 1)
 		self.players[1].setKeys()
 		
 		self.players[0].registerVars(self.players[1], self.platfromRects, None)
@@ -158,10 +145,11 @@ class Main(image.loadImage, menu.Menu):
 		self.playerGroup.add(self.players[0], self.players[1])
 		self.allsprites = pygame.sprite.OrderedUpdates((self.platform, self.mallows, self.mallow, self.rope, self.playerGroup, self.bubbles))
 		self.players[0].name = self.player1Name
-		self.players[0].name = self.player2Name
+		self.players[1].name = self.player2Name
 		
 	def colisions(self):
-		for bubble in self.bubbles:
+		pass
+		"""for bubble in self.bubbles:
 			side = bubble.rect.collidelist([self.sideLeft, self.sideRight, self.sideBottom, self.sideTop])
 			if side is not -1:
 				if side is 0:
@@ -178,7 +166,7 @@ class Main(image.loadImage, menu.Menu):
 				self.players[player].currentWeapon = bubble.currentWeapon
 				if self.players[player].currentWeapon is "gun":
 					self.players[player].ammo = 4
-				"""if player is 0:
+				if player is 0:
 					self.player1.currentWeapon = bubble.currentWeapon
 				elif player is 1:
 					self.player2.currentWeapon = bubble.currentWeapon"""
@@ -223,7 +211,7 @@ class Main(image.loadImage, menu.Menu):
 			if event.type == QUIT:
 				self.quit = 1
 			elif event.type == KEYDOWN:
-				for i in range(2):
+				for i in self.players:
 					if event.key in self.players[i].keys.values():
 					   self.players[i].keyDown(event.key)
 				if event.key == K_b:
@@ -236,7 +224,7 @@ class Main(image.loadImage, menu.Menu):
 					self.page = 1
 					self.background.fill((0, 0, 0))
 			elif event.type == KEYUP:
-				for i in range(2):
+				for i in self.players:
 					if event.key in self.players[i].keys.values():
 						self.players[i].keyUp(event.key)
 			
@@ -249,22 +237,17 @@ class Main(image.loadImage, menu.Menu):
 			print msg[1]
 			return 0
 		self.s.send(cPickle.dumps({"type":6, "name":"joel"}))
+		msg = cPickle.loads(self.s.recv(512))
+		if msg["type"] == 10:
+			self.id = msg["id"]
+			self.players = {}
+			self.players[self.id] = player.Player(51, 288)
+			self.players[self.id].setKeys(K_d, K_a, K_s, K_w, K_q)
+			self.playerGroup.add(self.players[self.id])
 		return 1
 
-	def binds(self):
-		"""Makes the curret player wait for a connection from another player"""
-		self.s = socket.socket()
-		try:
-			self.s.bind((self.bindAddy, self.port))
-		except socket.error, msg:
-			print msg[1]
-			return 0
-		self.s.listen(1)
-		self.conn, self.addr = self.s.accept()
-		print 'Connected by', self.addr
-
 	def pickelForSending(self, player):
-		"""Gets the infermation in the player objet ready for sending"""
+		"""Gets the information in the player object ready for sending"""
 		info = {}
 		for value in player.playerVars:
 			info[value] = player.playerVars[value]
@@ -272,7 +255,7 @@ class Main(image.loadImage, menu.Menu):
 		return compress(dump)
 		
 	def depickelForRecving(self, info, player):
-		"""inserts infermation from other client"""
+		"""inserts information from other client"""
 		try:
 			info = decompress(info)
 		except zlibError, msg:
